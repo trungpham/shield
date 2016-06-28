@@ -1,4 +1,4 @@
-# Shield [![Deps Status](https://beta.hexfaktor.org/badge/all/github/mustafaturan/shield.svg)](https://beta.hexfaktor.org/github/mustafaturan/shield)
+# Shield
 
 Shield is an OAuth2 Provider hex package and also a standalone microservice build top of the Phoenix Framework and 'authable' package.
 
@@ -12,66 +12,66 @@ The package can be installed as:
 
   1. Add shield to your list of dependencies in `mix.exs`:
 
-    def deps do
-      [{:shield, "~> 0.1.0"}]
-    end
+        def deps do
+          [{:shield, "~> 0.1.0"}]
+        end
 
   2. Ensure shield is started before your application:
 
-    def application do
-      [applications: [:shield]]
-    end
+        def application do
+          [applications: [:shield]]
+        end
 
   3. Add authable configurations to your `config/config.exs` file:
 
-    config :authable,
-      ecto_repos: [Authable.Repo],
-      repo: Authable.Repo,
-      resource_owner: Authable.Models.User,
-      token_store: Authable.Models.Token,
-      client: Authable.Models.Client,
-      app: Authable.Models.App,
-      expires_in: %{
-        access_token: 3600,
-        refresh_token: 24 * 3600,
-        authorization_code: 300,
-        session_token: 30 * 24 * 3600
-      },
-      strategies: %{
-        authorization_code: Authable.AuthorizationCodeGrantType,
-        client_credentials: Authable.ClientCredentialsGrantType,
-        password: Authable.PasswordGrantType,
-        refresh_token: Authable.RefreshTokenGrantType
-      },
-      scopes: ~w(read write session)
+        config :authable,
+          ecto_repos: [Authable.Repo],
+          repo: Authable.Repo,
+          resource_owner: Authable.Models.User,
+          token_store: Authable.Models.Token,
+          client: Authable.Models.Client,
+          app: Authable.Models.App,
+          expires_in: %{
+            access_token: 3600,
+            refresh_token: 24 * 3600,
+            authorization_code: 300,
+            session_token: 30 * 24 * 3600
+          },
+          strategies: %{
+            authorization_code: Authable.AuthorizationCodeGrantType,
+            client_credentials: Authable.ClientCredentialsGrantType,
+            password: Authable.PasswordGrantType,
+            refresh_token: Authable.RefreshTokenGrantType
+          },
+          scopes: ~w(read write session)
 
   4. Add shield configurations to your `config/config.exs` file:
 
-      config :shield,
-        authorizations: %{
-          headers: %{
-            "authorization" => %{
-              "Basic" => Authable.Authentications.Basic,
-              "Bearer" => Authable.Authentications.Bearer
+        config :shield,
+          authorizations: %{
+            headers: %{
+              "authorization" => %{
+                "Basic" => Authable.Authentications.Basic,
+                "Bearer" => Authable.Authentications.Bearer
+              },
+              "x-api-token" => Authable.Authentications.Bearer
             },
-            "x-api-token" => Authable.Authentications.Bearer
+            query_params: %{
+              "access_token" => Authable.Authentications.Bearer
+            },
+            session: %{
+              "session_token" => Authable.Authentications.Session
+            }
           },
-          query_params: %{
-            "access_token" => Authable.Authentications.Bearer
+          views: %{
+            changeset: Shield.ChangesetView,
+            error: Shield.ErrorView,
+            app: Shield.AppView,
+            client: Shield.ClientView,
+            token: Shield.TokenView,
+            user: Shield.UserView
           },
-          session: %{
-            "session_token" => Authable.Authentications.Session
-          }
-        },
-        views: %{
-          changeset: Shield.ChangesetView,
-          error: Shield.ErrorView,
-          app: Shield.AppView,
-          client: Shield.ClientView,
-          token: Shield.TokenView,
-          user: Shield.UserView
-        },
-        cors_origins: ["localhost:4000", "*"]
+          cors_origins: ["localhost:4000", "*"]
 
   If you want to disable a authorization strategy, then delete it from shield configuration.
 
@@ -79,58 +79,58 @@ The package can be installed as:
 
   5. Add database configurations for the `Authable.Repo` on env config files:
 
-    config :authable, Authable.Repo,
-      adapter: Ecto.Adapters.Postgres,
-      username: "postgres",
-      password: "",
-      database: "",
-      hostname: "",
-      pool_size: 10
+        config :authable, Authable.Repo,
+          adapter: Ecto.Adapters.Postgres,
+          username: "postgres",
+          password: "",
+          database: "",
+          hostname: "",
+          pool_size: 10
 
   6. Run migrations for Authable.Repo (Note: all id fields are UUID type):
 
-    mix ecto.create
-    mix ecto.migrate -r Authable.Repo
+        mix ecto.create
+        mix ecto.migrate -r Authable.Repo
 
   7. Use installer to generate controllers from originals
 
-    # Run only if you need to change controller behaviours, otherwise skip this.
-    mix shield.install
+        # Run only if you need to change controller behaviours, otherwise skip this.
+        mix shield.install
 
   8. Add routes
 
-    pipeline :api do
-      plug :accepts, ["json"]
-    end
+        pipeline :api do
+          plug :accepts, ["json"]
+        end
 
-    scope "/", Shield do
-      pipe_through :api
-      resources "/clients", ClientController, except: [:new, :edit]
+        scope "/", Shield do
+          pipe_through :api
+          resources "/clients", ClientController, except: [:new, :edit]
 
-      get     "/apps", AppController, :index
-      get     "/apps/:id", AppController, :show
-      delete  "/apps/:id", AppController, :delete
-      post    "/apps/authorize", AppController, :authorize
+          get     "/apps", AppController, :index
+          get     "/apps/:id", AppController, :show
+          delete  "/apps/:id", AppController, :delete
+          post    "/apps/authorize", AppController, :authorize
 
-      get     "/tokens/:id", TokenController, :show
-      post    "/tokens", TokenController, :create
+          get     "/tokens/:id", TokenController, :show
+          post    "/tokens", TokenController, :create
 
-      post    "/users/register", UserController, :register
-      post    "/users/login", UserController, :login
-      delete  "/users/logout", UserController, :logout
-      get     "/users/me", UserController, :me
-    end
+          post    "/users/register", UserController, :register
+          post    "/users/login", UserController, :login
+          delete  "/users/logout", UserController, :logout
+          get     "/users/me", UserController, :me
+        end
 
   9. You are ready to go!
 
 ### Standalone
 
-    git clone git@github.com:mustafaturan/shield.git
-    cd shields
-    mix deps.get
-    mix ecto.create
-    mix ecto.migrate -r Authable.Repo
-    mix phoenix.server
+        git clone git@github.com:mustafaturan/shield.git
+        cd shields
+        mix deps.get
+        mix ecto.create
+        mix ecto.migrate -r Authable.Repo
+        mix phoenix.server
 
 ### Heroku
 
@@ -142,88 +142,88 @@ The package can be installed as:
 
 Inside your controller modules; add the following lines to restrict access to actions.
 
-    use Shield.Authorization
+        use Shield.Authorization
 
-    # Then add plug to restrict access to all actions
-    plug :authenticate!
+        # Then add plug to restrict access to all actions
+        plug :authenticate!
 
-    # Example inside module
+        # Example inside module
 
-    defmodule SomeModule.AppController do
-      use SomeModule.Web, :controller
-      ...
-      use Shield.Authorization
+        defmodule SomeModule.AppController do
+          use SomeModule.Web, :controller
+          ...
+          use Shield.Authorization
 
-      plug :authenticate!
+          plug :authenticate!
 
-      def index(conn, _params) do
-        # access to current user on successful authentication
-        current_user = conn.assigns[:current_user]
-        ...
-      end
+          def index(conn, _params) do
+            # access to current user on successful authentication
+            current_user = conn.assigns[:current_user]
+            ...
+          end
 
-      ...
-    end
+          ...
+        end
 
 If you need to restrict specific resource, you may guard with when clause. Forexample, to check authentication only on :create, :update and :delete actions of your controllers.
 
-    plug :authenticate! when action in [:create, :update, :delete]
+        plug :authenticate! when action in [:create, :update, :delete]
 
 Incase you do not want to allow registered user to access resources:
 
-    use Shield.Authorization
+        use Shield.Authorization
 
-    # Then add plug `:already_logged_in?` function for necessary actions
-    plug :already_logged_in? when action in [:register]
+        # Then add plug `:already_logged_in?` function for necessary actions
+        plug :already_logged_in? when action in [:register]
 
-    # Example inside module
+        # Example inside module
 
-    defmodule SomeModule.AppController do
-      use SomeModule.Web, :controller
-      ...
-      use Shield.Authorization
+        defmodule SomeModule.AppController do
+          use SomeModule.Web, :controller
+          ...
+          use Shield.Authorization
 
-      plug :authenticate! when action in [:create]
-      plug :already_logged_in? when action in [:register]
+          plug :authenticate! when action in [:create]
+          plug :already_logged_in? when action in [:register]
 
-      def register(conn, _params) do
-        # if user logged in, then will response automatically with
-        # unprocessable_entity 422 header and error
-        ...
-      end
+          def register(conn, _params) do
+            # if user logged in, then will response automatically with
+            # unprocessable_entity 422 header and error
+            ...
+          end
 
-      def create(conn, params) do
-        # access to current user on successful authentication
-        current_user = conn.assigns[:current_user]
-        ...
-      end
+          def create(conn, params) do
+            # access to current user on successful authentication
+            current_user = conn.assigns[:current_user]
+            ...
+          end
 
-      ...
-    end
+          ...
+        end
 
 Manually handling authentication:
 
-    defmodule SomeModule.AppController do
-      use SomeModule.Web, :controller
-      ...
-      use Shield.Authorization
+        defmodule SomeModule.AppController do
+          use SomeModule.Web, :controller
+          ...
+          use Shield.Authorization
 
-      def register(conn, _params) do
-        current_user = authenticate(conn)
-        if is_nil(current_user) do
-          IO.puts "not authencated!"
-        else
-          IO.puts current_user.email
+          def register(conn, _params) do
+            current_user = authenticate(conn)
+            if is_nil(current_user) do
+              IO.puts "not authencated!"
+            else
+              IO.puts current_user.email
+            end
+            ...
+          end
         end
-        ...
-      end
-    end
 
 ### Accessing resource owner info
 
 By default `Authable.Models.User` represents resource owner. To access resource owner, plug `authenticate!` or `already_signed_in?` must be called. Then current user information will be available by conn assignments.
 
-    conn.assigns[:current_user]
+        conn.assigns[:current_user]
 
 ### Views
 
