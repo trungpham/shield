@@ -13,7 +13,7 @@ The package can be installed as:
   1. Add shield to your list of dependencies in `mix.exs`:
 
         def deps do
-          [{:shield, "~> 0.1.0"}]
+          [{:shield, "~> 0.1.1"}]
         end
 
   2. Ensure shield is started before your application:
@@ -251,13 +251,18 @@ Shield and Authable are extensible modules, you can create your strategy and sha
 
 ## Todo
 
-Swagger documentation
-Background job to delete expired tokens
-EmberJS client implementation as a seperate sample app
-Sample resource server implementation
+  - [ ] Swagger documentation
+
+  - [ ] Background job to delete expired tokens
+
+  - [ ] EmberJS client implementation as a seperate sample app
+
+  - [ ] Sample resource server implementation
 
 ## References
 
 https://tools.ietf.org/html/rfc6749
+
 https://github.com/mustafaturan/authable
+
 https://hexdocs.pm/authable

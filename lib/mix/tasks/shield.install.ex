@@ -8,10 +8,6 @@ defmodule Mix.Tasks.Shield.Install do
 
   # File mappings
 
-  @new [
-    {:eex,  "config/config.exs",      "config/config.exs.template"},
-  ]
-
   @controllers [
     {:eex,  "web/controllers/app_controller.ex", "web/controllers/shield/app_controller.ex"},
     {:eex,  "web/controllers/client_controller.ex", "web/controllers/shield/client_controller.ex"},
@@ -33,6 +29,13 @@ defmodule Mix.Tasks.Shield.Install do
     {:eex,  "web/models/client.ex", "web/models/authable/client.ex"},
     {:eex,  "web/models/token.ex", "web/models/authable/token.ex"},
     {:eex,  "web/models/user.ex", "web/models/authable/user.ex"},
+  ]
+
+  @migrations [
+    {:eex,  "priv/repo/migrations/20160503214613_create_user.exs", "priv/repo/migrations/20160503214613_create_user.exs"},
+    {:eex,  "priv/repo/migrations/20160504001808_create_token.exs", "priv/repo/migrations/20160504001808_create_token.exs"},
+    {:eex,  "priv/repo/migrations/20160504001852_create_client.exs", "priv/repo/migrations/20160504001852_create_client.exs"},
+    {:eex,  "priv/repo/migrations/20160504007852_create_app.exs", "priv/repo/migrations/20160504007852_create_app.exs"},
   ]
 
   @moduledoc """
@@ -57,10 +60,10 @@ defmodule Mix.Tasks.Shield.Install do
 
   defp multi_cp() do
 
-    Mix.Phoenix.copy_from shield_paths, "./deps/shield/", "", [], @new
     Mix.Phoenix.copy_from shield_paths, "./deps/shield/", "", [], @controllers
     Mix.Phoenix.copy_from shield_paths, "./deps/shield/", "", [], @views
     Mix.Phoenix.copy_from authable_paths, "./deps/authable/", "", [], @models
+    Mix.Phoenix.copy_from authable_paths, "./deps/authable/", "", [], @migrations
 
     print_controllers_info
     print_ecto_info
