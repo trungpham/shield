@@ -15,7 +15,7 @@
     },
     "POOL_SIZE": {
       "description": "Database pool size",
-      "value": "20"
+      "value": "10"
     }
   },
   "addons": [
