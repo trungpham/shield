@@ -55,6 +55,7 @@ defmodule Shield.Plug do
     if is_nil(current_user) do
       conn
       |> put_status(:unauthorized)
+      |> put_resp_header("www-authenticate", "Bearer realm=\"_shield\"")
       |> render(@views[:error], "401.json")
       |> halt
     else
