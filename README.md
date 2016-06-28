@@ -10,7 +10,8 @@ Shield can be used inside an application or can be used as standalone microservi
 
 The package can be installed as:
 
-  1. Add shield to your list of dependencies in `mix.exs`:
+  1. Add shield to your list of dependencies in `mix.exs` and run `mix deps.get
+`:
 
         def deps do
           [{:shield, "~> 0.1.1"}]
@@ -77,7 +78,12 @@ The package can be installed as:
 
   If you want to add a new authorization strategy then add your own module.
 
-  5. Add database configurations for the `Authable.Repo` on env config files:
+  5. Use installer to generate controllers, views, models and migrations from originals
+
+        # Run only if you need to change behaviours, otherwise skip this.
+        mix shield.install
+
+  6. Add database configurations for the `Authable.Repo` on env config files:
 
         config :authable, Authable.Repo,
           adapter: Ecto.Adapters.Postgres,
@@ -87,15 +93,10 @@ The package can be installed as:
           hostname: "",
           pool_size: 10
 
-  6. Run migrations for Authable.Repo (Note: all id fields are UUID type):
+  7. Run migrations for Authable.Repo (Note: all id fields are UUID type):
 
         mix ecto.create
         mix ecto.migrate -r Authable.Repo
-
-  7. Use installer to generate controllers from originals
-
-        # Run only if you need to change controller behaviours, otherwise skip this.
-        mix shield.install
 
   8. Add routes
 
