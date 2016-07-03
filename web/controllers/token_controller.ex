@@ -1,13 +1,11 @@
 defmodule Shield.TokenController do
   use Shield.Web, :controller
-  use Shield.Authorization
   alias Authable.OAuth2, as: OAuth2
 
   @repo Application.get_env(:authable, :repo)
   @user Application.get_env(:authable, :resource_owner)
   @client Application.get_env(:authable, :client)
   @token_store Application.get_env(:authable, :token_store)
-
   @views Application.get_env(:shield, :views)
 
   def show(conn, %{"id" => token_value, "client_id" => client_id, "client_secret" => secret}) do

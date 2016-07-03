@@ -13,7 +13,7 @@ defmodule Shield.Factory do
 
   def user_factory do
     %@resource_owner{
-      email: sequence(:email, &"email-#{&1}@example.com"),
+      email: sequence(:email, &"foo-#{&1}@example.com"),
       password: Comeonin.Bcrypt.hashpwsalt("12345678")
     }
   end
@@ -34,7 +34,8 @@ defmodule Shield.Factory do
     %@token_store{
       name: "session_token",
       value: sequence(:value, &"st#{&1}"),
-      expires_at: Timex.Time.now(:seconds) + 3600
+      expires_at: Timex.Time.now(:seconds) + 3600,
+      details: %{scope: "session,read,write"}
     }
   end
 

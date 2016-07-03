@@ -1,14 +1,12 @@
 defmodule Shield.ClientController do
   use Shield.Web, :controller
-  use Shield.Authorization
 
   @repo Application.get_env(:authable, :repo)
   @client Application.get_env(:authable, :client)
-
   @views Application.get_env(:shield, :views)
 
   plug :scrub_params, "client" when action in [:create, :update]
-  plug :authenticate!
+  plug Authable.Plug.Authenticate, [scopes: ~w(session)]
 
   def index(conn, _params) do
     query = (from c in @client,

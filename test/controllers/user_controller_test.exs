@@ -27,9 +27,9 @@ defmodule Shield.UserControllerTest do
     assert json_response(conn, 201)["user"]
   end
 
-  test "a GET request to /me gives unauthorized error", %{conn: conn} do
+  test "a GET request without auth to /me gives forbidden error", %{conn: conn} do
     conn = get conn, user_path(conn, :me)
-    assert response(conn, 401)
+    assert response(conn, 403)
   end
 
   test "a POST request to /register with valid email and password", %{conn: conn} do
@@ -46,7 +46,7 @@ defmodule Shield.UserControllerTest do
     conn = conn
            |> sign_conn
            |> post(user_path(conn, :register), user: params)
-    assert response(conn, 422)
+    assert response(conn, 400)
   end
 
   test "a POST request to /register with missing password", %{conn: conn} do
@@ -94,6 +94,6 @@ defmodule Shield.UserControllerTest do
 
   test "a DELETE request to /logout without a valid session", %{conn: conn} do
     conn = delete conn, user_path(conn, :logout)
-    assert response(conn, 401)
+    assert response(conn, 403)
   end
 end
