@@ -147,14 +147,14 @@ The package can be installed as:
 Inside your controller modules; add the following lines to restrict access to actions.
 
         # Add plug to restrict access to all actions
-        plug Authable.Plug.Authenticate [scopes: ~w(read)]
+        plug Authable.Plug.Authenticate, [scopes: ~w(read)]
 
         # Example inside module
 
         defmodule SomeModule.AppController do
           use SomeModule.Web, :controller
           ...
-          plug Authable.Plug.Authenticate [scopes: ~w(read write)]
+          plug Authable.Plug.Authenticate, [scopes: ~w(read write)]
 
           def index(conn, _params) do
             # access to current user on successful authentication
@@ -167,7 +167,7 @@ Inside your controller modules; add the following lines to restrict access to ac
 
 If you need to restrict specific resource, you may guard with when clause. Forexample, to check authentication only on :create, :update and :delete actions of your controllers.
 
-        plug Authable.Plug.Authenticate [scopes: ~w(read write)] when action in [:create, :update, :delete]
+        plug Authable.Plug.Authenticate, [scopes: ~w(read write)] when action in [:create, :update, :delete]
 
 Incase you do not want to allow registered user to access resources:
 
@@ -180,7 +180,7 @@ Incase you do not want to allow registered user to access resources:
           use SomeModule.Web, :controller
           ...
 
-          plug Authable.Plug.Authenticate [scopes: ~w(read write)] when action in [:create]
+          plug Authable.Plug.Authenticate, [scopes: ~w(read write)] when action in [:create]
           plug Authable.Plug.UnauthorizedOnly when action in [:register]
 
           def register(conn, _params) do
