@@ -1,17 +1,15 @@
 defmodule Shield.UserController do
   use Shield.Web, :controller
-  use Shield.Authorization
   alias Authable.Utils.Crypt, as: CryptUtil
 
   @repo Application.get_env(:authable, :repo)
   @user Application.get_env(:authable, :resource_owner)
   @token_store Application.get_env(:authable, :token_store)
-
   @views Application.get_env(:shield, :views)
 
   plug :scrub_params, "user" when action in [:register, :login]
-  plug :authenticate! when action in [:me, :logout]
-  plug :already_logged_in? when action in [:register, :login]
+  plug Authable.Plug.Authenticate, [scopes: ~w(read write)] when action in [:me, :logout]
+  plug Authable.Plug.UnauthorizedOnly when action in [:register, :login]
 
   def me(conn, _) do
     conn
@@ -37,7 +35,7 @@ defmodule Shield.UserController do
     user = @repo.get_by(@user, email: user_params["email"])
     if user && match_with_user_password(user_params["password"], user) do
       changeset = @token_store.session_token_changeset(%@token_store{},
-                                                       %{user_id: user.id})
+                    %{user_id: user.id, details: %{"scope" => "session"}})
       case @repo.insert(changeset) do
         {:ok, token} ->
           conn

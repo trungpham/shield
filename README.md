@@ -28,42 +28,45 @@ The package can be installed as:
         config :authable,
           ecto_repos: [Authable.Repo],
           repo: Authable.Repo,
-          resource_owner: Authable.Models.User,
-          token_store: Authable.Models.Token,
-          client: Authable.Models.Client,
-          app: Authable.Models.App,
+          resource_owner: Authable.Model.User,
+          token_store: Authable.Model.Token,
+          client: Authable.Model.Client,
+          app: Authable.Model.App,
           expires_in: %{
             access_token: 3600,
             refresh_token: 24 * 3600,
             authorization_code: 300,
             session_token: 30 * 24 * 3600
           },
-          strategies: %{
-            authorization_code: Authable.AuthorizationCodeGrantType,
-            client_credentials: Authable.ClientCredentialsGrantType,
-            password: Authable.PasswordGrantType,
-            refresh_token: Authable.RefreshTokenGrantType
+          grant_types: %{
+            authorization_code: Authable.GrantType.AuthorizationCode,
+            client_credentials: Authable.GrantType.ClientCredentials,
+            password: Authable.GrantType.Password,
+            refresh_token: Authable.GrantType.RefreshToken
           },
-          scopes: ~w(read write session)
+          auth_strategies: %{
+            headers: %{
+              "authorization" => [
+                {~r/Basic ([a-zA-Z\-_\+=]+)/, Authable.Authentication.Basic},
+                {~r/Bearer ([a-zA-Z\-_\+=]+)/, Authable.Authentication.Bearer},
+              ],
+              "x-api-token" => [
+                {~r/([a-zA-Z\-_\+=]+)/, Authable.Authentication.Bearer}
+              ]
+            },
+            query_params: %{
+              "access_token" => Authable.Authentication.Bearer
+            },
+            sessions: %{
+              "session_token" => Authable.Authentication.Session
+            }
+          },
+          scopes: ~w(read write session),
+          renderer: Authable.Rederer.RestApi
 
   4. Add shield configurations to your `config/config.exs` file:
 
         config :shield,
-          authorizations: %{
-            headers: %{
-              "authorization" => %{
-                "Basic" => Authable.Authentications.Basic,
-                "Bearer" => Authable.Authentications.Bearer
-              },
-              "x-api-token" => Authable.Authentications.Bearer
-            },
-            query_params: %{
-              "access_token" => Authable.Authentications.Bearer
-            },
-            session: %{
-              "session_token" => Authable.Authentications.Session
-            }
-          },
           views: %{
             changeset: Shield.ChangesetView,
             error: Shield.ErrorView,
@@ -129,7 +132,7 @@ The package can be installed as:
         git clone git@github.com:mustafaturan/shield.git
         cd shields
         mix deps.get
-        mix ecto.create
+        mix ecto.create -r Authable.Repo
         mix ecto.migrate -r Authable.Repo
         mix phoenix.server
 
@@ -143,19 +146,15 @@ The package can be installed as:
 
 Inside your controller modules; add the following lines to restrict access to actions.
 
-        use Shield.Authorization
-
-        # Then add plug to restrict access to all actions
-        plug :authenticate!
+        # Add plug to restrict access to all actions
+        plug Authable.Plug.Authenticate [scopes: ~w(read)]
 
         # Example inside module
 
         defmodule SomeModule.AppController do
           use SomeModule.Web, :controller
           ...
-          use Shield.Authorization
-
-          plug :authenticate!
+          plug Authable.Plug.Authenticate [scopes: ~w(read write)]
 
           def index(conn, _params) do
             # access to current user on successful authentication
@@ -168,24 +167,21 @@ Inside your controller modules; add the following lines to restrict access to ac
 
 If you need to restrict specific resource, you may guard with when clause. Forexample, to check authentication only on :create, :update and :delete actions of your controllers.
 
-        plug :authenticate! when action in [:create, :update, :delete]
+        plug Authable.Plug.Authenticate [scopes: ~w(read write)] when action in [:create, :update, :delete]
 
 Incase you do not want to allow registered user to access resources:
 
-        use Shield.Authorization
-
-        # Then add plug `:already_logged_in?` function for necessary actions
-        plug :already_logged_in? when action in [:register]
+        # Add plug `Authable.Plug.UnauthorizedOnly` for necessary actions
+        plug :Authable.Plug.UnauthorizedOnly when action in [:register]
 
         # Example inside module
 
         defmodule SomeModule.AppController do
           use SomeModule.Web, :controller
           ...
-          use Shield.Authorization
 
-          plug :authenticate! when action in [:create]
-          plug :already_logged_in? when action in [:register]
+          plug Authable.Plug.Authenticate [scopes: ~w(read write)] when action in [:create]
+          plug Authable.Plug.UnauthorizedOnly when action in [:register]
 
           def register(conn, _params) do
             # if user logged in, then will response automatically with
@@ -207,10 +203,10 @@ Manually handling authentication:
         defmodule SomeModule.AppController do
           use SomeModule.Web, :controller
           ...
-          use Shield.Authorization
+          import Authable.Helper
 
           def register(conn, _params) do
-            current_user = authenticate(conn)
+            current_user = authorize_for_resource(conn, ~w(read write))
             if is_nil(current_user) do
               IO.puts "not authencated!"
             else
@@ -222,7 +218,7 @@ Manually handling authentication:
 
 ### Accessing resource owner info
 
-By default `Authable.Models.User` represents resource owner. To access resource owner, plug `authenticate!` or `already_signed_in?` must be called. Then current user information will be available by conn assignments.
+By default `Authable.Model.User` represents resource owner. To access resource owner, plug `Authable.Plug.Authenticate` must be called. Then current user information will be available by conn assignments.
 
         conn.assigns[:current_user]
 
