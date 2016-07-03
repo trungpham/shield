@@ -1,16 +1,14 @@
 defmodule Shield.AppController do
   use Shield.Web, :controller
-  use Shield.Authorization
   alias Authable.OAuth2, as: OAuth2
 
   @repo Application.get_env(:authable, :repo)
   @app Application.get_env(:authable, :app)
   @token_store Application.get_env(:authable, :token_store)
   @client Application.get_env(:authable, :client)
-
   @views Application.get_env(:shield, :views)
 
-  plug :authenticate!
+  plug Authable.Plug.Authenticate, [scopes: ~w(session)]
 
   def index(conn, _params) do
     query = (from a in @app,
@@ -36,12 +34,17 @@ defmodule Shield.AppController do
   end
 
   def authorize(conn, %{"app" => params}) do
-    app = OAuth2.authorize_app(conn.assigns[:current_user], params)
-    if is_nil(app) do
+    result = OAuth2.authorize_app(conn.assigns[:current_user], params)
+    case result do
+    nil ->
       conn
       |> put_status(:unprocessable_entity)
       |> render(@views[:error], "422.json")
-    else
+    {:error, errors, http_status_code} ->
+      conn
+      |> put_status(http_status_code)
+      |> render(@views[:error], "422.json")
+    app ->
       changeset = @token_store.authorization_code_changeset(%@token_store{}, %{
         user_id: conn.assigns[:current_user].id,
         details: %{
@@ -51,13 +54,13 @@ defmodule Shield.AppController do
         }
       })
       case @repo.insert(changeset) do
-        {:ok, token} ->
-          conn |> put_status(:created)
-               |> render(@views[:token], "show.json", token: token)
-        {:error, _} ->
-          conn
-          |> put_status(:unprocessable_entity)
-          |> render(@views[:error], "422.json")
+      {:ok, token} ->
+        conn |> put_status(:created)
+             |> render(@views[:token], "show.json", token: token)
+      {:error, _} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(@views[:error], "422.json")
       end
     end
   end

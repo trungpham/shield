@@ -13,7 +13,7 @@ defmodule Shield.ClientControllerTest do
     client = insert(:client, user_id: user.id)
     insert(:app, user_id: user.id, client_id: client.id)
     access_token = insert(:access_token, user_id: user.id,
-      details: %{client_id: client.id})
+      details: %{client_id: client.id, scope: "session"})
 
     {:ok,
      conn: conn
