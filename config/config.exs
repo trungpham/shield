@@ -61,7 +61,7 @@ config :shield,
       }
     },
     scopes: ~w(read write session),
-    renderer: Authable.Rederer.RestApi
+    renderer: Authable.Renderer.RestApi
 
 # Configures Elixir's Logger
 config :logger, :console,

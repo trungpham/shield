@@ -14,7 +14,7 @@ The package can be installed as:
 `:
 
         def deps do
-          [{:shield, "~> 0.1.1"}]
+          [{:shield, "~> 0.2.1"}]
         end
 
   2. Ensure shield is started before your application:
@@ -62,7 +62,7 @@ The package can be installed as:
             }
           },
           scopes: ~w(read write session),
-          renderer: Authable.Rederer.RestApi
+          renderer: Authable.Renderer.RestApi
 
   4. Add shield configurations to your `config/config.exs` file:
 
