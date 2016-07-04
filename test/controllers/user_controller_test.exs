@@ -24,7 +24,7 @@ defmodule Shield.UserControllerTest do
     conn = conn
            |> sign_conn
     conn = conn |> get(user_path(conn, :me))
-    assert json_response(conn, 201)["user"]
+    assert json_response(conn, 200)["user"]
   end
 
   test "a GET request without auth to /me gives forbidden error", %{conn: conn} do

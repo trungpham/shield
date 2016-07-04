@@ -13,7 +13,7 @@ defmodule Shield.UserController do
 
   def me(conn, _) do
     conn
-    |> put_status(:created)
+    |> put_status(:ok)
     |> render(@views[:user], "show.json", user: conn.assigns[:current_user])
   end
 
