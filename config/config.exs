@@ -21,7 +21,7 @@ config :shield,
     token: Shield.TokenView,
     user: Shield.UserView
   },
-  cors_origins: ["localhost:4000", "*"]
+  cors_origins: ["http://localhost:4200", "*"]
 
 
   config :authable,
