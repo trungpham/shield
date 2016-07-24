@@ -35,7 +35,7 @@ defmodule Shield.Endpoint do
   plug Plug.Session,
     store: :cookie,
     key: "_shield_key",
-    signing_salt: "VqDRd89R"
+    signing_salt: System.get_env("SECRET_SIGNING_SALT") || "VqDRd89R"
 
   plug CORSPlug, origin: @cors_origins
 
