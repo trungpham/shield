@@ -10,6 +10,10 @@
   ],
   "env": {
     "SECRET_KEY_BASE": {
+      "description": "Secret key base.",
+      "generator": "secret"
+    },
+    "SECRET_SIGNING_SALT": {
       "description": "A secret key for verifying the integrity of signed cookies.",
       "generator": "secret"
     },
