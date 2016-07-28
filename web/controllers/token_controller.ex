@@ -1,5 +1,6 @@
 defmodule Shield.TokenController do
   use Shield.Web, :controller
+  use Shield.HookImporter
   alias Authable.OAuth2, as: OAuth2
 
   @repo Application.get_env(:authable, :repo)
@@ -7,6 +8,10 @@ defmodule Shield.TokenController do
   @client Application.get_env(:authable, :client)
   @token_store Application.get_env(:authable, :token_store)
   @views Application.get_env(:shield, :views)
+  @hooks Application.get_env(:shield, :hooks)
+  @renderer Application.get_env(:authable, :renderer)
+
+  plug :before_token_create when action in [:create]
 
   def show(conn, %{"id" => token_value, "client_id" => client_id, "client_secret" => secret}) do
     token = @repo.get_by(@token_store, value: token_value)
@@ -20,24 +25,25 @@ defmodule Shield.TokenController do
       if is_nil(client) ||
         Map.get(token.details, "client_id", "") != client_id do
         conn
-          |> put_status(:not_found)
-          |> render(@views[:error], "404.json")
+        |> put_status(:not_found)
+        |> render(@views[:error], "404.json")
       else
         conn
-          |> put_status(:ok)
-          |> render(@views[:token], "show.json", token: token)
+        |> put_status(:ok)
+        |> render(@views[:token], "show.json", token: token)
       end
     end
   end
 
   def create(conn, params) do
-    token = OAuth2.authorize(params)
-    if is_nil(token) do
-      conn
-        |> put_status(:unprocessable_entity)
-        |> render(@views[:error], "422.json")
-    else
-      conn
+    case OAuth2.authorize(params) do
+      {:error, errors, http_status_code} ->
+        conn
+        |> @hooks.after_token_create_failure(errors, http_status_code)
+        |> @renderer.render(http_status_code, %{errors: errors})
+      token ->
+        conn
+        |> @hooks.after_token_create_success(token)
         |> put_status(:created)
         |> render(@views[:token], "show.json", token: token)
     end

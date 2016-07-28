@@ -1,11 +1,16 @@
 defmodule Shield.ClientController do
   use Shield.Web, :controller
+  use Shield.HookImporter
 
   @repo Application.get_env(:authable, :repo)
   @client Application.get_env(:authable, :client)
   @views Application.get_env(:shield, :views)
+  @hooks Application.get_env(:shield, :hooks)
 
   plug :scrub_params, "client" when action in [:create, :update]
+  plug :before_client_create when action in [:create]
+  plug :before_client_update when action in [:update]
+  plug :before_client_delete when action in [:delete]
   plug Authable.Plug.Authenticate, [scopes: ~w(session)]
 
   def index(conn, _params) do
@@ -23,11 +28,13 @@ defmodule Shield.ClientController do
     case @repo.insert(changeset) do
       {:ok, client} ->
         conn
+        |> @hooks.after_client_create_success(client)
         |> put_status(:created)
         |> put_resp_header("location", client_path(conn, :show, client))
         |> render(@views[:client], "show.json", client: client)
       {:error, changeset} ->
         conn
+        |> @hooks.after_client_create_failure(changeset)
         |> put_status(:unprocessable_entity)
         |> render(@views[:changeset],  "error.json",
                   changeset: changeset)
@@ -55,10 +62,12 @@ defmodule Shield.ClientController do
     case @repo.update(changeset) do
       {:ok, client} ->
         conn
+        |> @hooks.after_client_update_success(client)
         |> put_status(:ok)
         |> render(@views[:client], "show.json", client: client)
       {:error, changeset} ->
         conn
+        |> @hooks.after_client_update_failure(changeset)
         |> put_status(:unprocessable_entity)
         |> render(@views[:changeset], "error.json",
                   changeset: changeset)
@@ -70,6 +79,8 @@ defmodule Shield.ClientController do
                            user_id: conn.assigns[:current_user].id)
     @repo.delete!(client)
 
-    send_resp(conn, :no_content, "")
+    conn
+    |> @hooks.after_client_delete
+    |> send_resp(:no_content, "")
   end
 end
