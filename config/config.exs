@@ -13,6 +13,7 @@ config :shield, Shield.Endpoint,
   render_errors: [accepts: ~w(json), format: "json"]
 
 config :shield,
+  hooks: Shield.Hook.Default,
   views: %{
     changeset: Shield.ChangesetView,
     error: Shield.ErrorView,
@@ -22,7 +23,6 @@ config :shield,
     user: Shield.UserView
   },
   cors_origins: ["http://localhost:4200", "*"]
-
 
   config :authable,
     ecto_repos: [Authable.Repo],

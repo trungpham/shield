@@ -1,5 +1,6 @@
 defmodule Shield.AppController do
   use Shield.Web, :controller
+  use Shield.HookImporter
   alias Authable.OAuth2, as: OAuth2
 
   @repo Application.get_env(:authable, :repo)
@@ -8,6 +9,8 @@ defmodule Shield.AppController do
   @client Application.get_env(:authable, :client)
   @views Application.get_env(:shield, :views)
 
+  plug :before_app_authorize when action in [:authorize]
+  plug :before_app_delete when action in [:delete]
   plug Authable.Plug.Authenticate, [scopes: ~w(session)]
 
   def index(conn, _params) do
@@ -36,12 +39,9 @@ defmodule Shield.AppController do
   def authorize(conn, %{"app" => params}) do
     result = OAuth2.authorize_app(conn.assigns[:current_user], params)
     case result do
-    nil ->
-      conn
-      |> put_status(:unprocessable_entity)
-      |> render(@views[:error], "422.json")
     {:error, errors, http_status_code} ->
       conn
+      |> @hooks.after_app_authorize_failure(errors, http_status_code)
       |> put_status(http_status_code)
       |> render(@views[:error], "422.json")
     app ->
@@ -55,10 +55,13 @@ defmodule Shield.AppController do
       })
       case @repo.insert(changeset) do
       {:ok, token} ->
-        conn |> put_status(:created)
-             |> render(@views[:token], "show.json", token: token)
-      {:error, _} ->
         conn
+        |> @hooks.after_app_authorize_success(token)
+        |> put_status(:created)
+        |> render(@views[:token], "show.json", token: token)
+      {:error, errors} ->
+        conn
+        |> @hooks.after_app_authorize_failure(errors, :unprocessable_entity)
         |> put_status(:unprocessable_entity)
         |> render(@views[:error], "422.json")
       end
@@ -67,6 +70,8 @@ defmodule Shield.AppController do
 
   def delete(conn, %{"id" => id}) do
     OAuth2.revoke_app_authorization(conn.assigns[:current_user], %{"id" => id})
-    send_resp(conn, :no_content, "")
+    conn
+    |> @hooks.after_app_delete
+    |> send_resp(:no_content, "")
   end
 end
