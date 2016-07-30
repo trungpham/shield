@@ -67,6 +67,7 @@ The package can be installed as:
   4. Add shield configurations to your `config/config.exs` file:
 
         config :shield,
+          hooks: Shield.Hook.Default,
           views: %{
             changeset: Shield.ChangesetView,
             error: Shield.ErrorView,
