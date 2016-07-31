@@ -12,7 +12,9 @@ defmodule Shield.ClientController do
   plug :before_client_update when action in [:update]
   plug :before_client_delete when action in [:delete]
   plug Authable.Plug.Authenticate, [scopes: ~w(session)]
+  plug Shield.Arm.Confirmable, [enabled: Application.get_env(:shield, :confirmable)]
 
+  # GET /clients
   def index(conn, _params) do
     query = (from c in @client,
              where: c.user_id == ^conn.assigns[:current_user].id)
@@ -20,6 +22,7 @@ defmodule Shield.ClientController do
     render(conn, @views[:client], "index.json", clients: clients)
   end
 
+  # POST /clients
   def create(conn, %{"client" => client_params}) do
     client_params = Map.put(client_params, "user_id",
                             conn.assigns[:current_user].id)
@@ -41,6 +44,7 @@ defmodule Shield.ClientController do
     end
   end
 
+  # GET /clients/:id
   def show(conn, %{"id" => id}) do
     case @repo.get_by(@client, id: id,
                        user_id: conn.assigns[:current_user].id) do
@@ -54,6 +58,7 @@ defmodule Shield.ClientController do
     end
   end
 
+  # PUT /clients/:id
   def update(conn, %{"id" => id, "client" => client_params}) do
     client = @repo.get_by!(@client, id: id,
                            user_id: conn.assigns[:current_user].id)
@@ -74,6 +79,7 @@ defmodule Shield.ClientController do
     end
   end
 
+  # DELETE /clients/:id
   def delete(conn, %{"id" => id}) do
     client = @repo.get_by!(@client, id: id,
                            user_id: conn.assigns[:current_user].id)

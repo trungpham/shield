@@ -20,10 +20,15 @@
     "POOL_SIZE": {
       "description": "Database pool size",
       "value": "10"
+    },
+    "SENDGRID_API_KEY": {
+      "description": "Sendgrid API KEY with mail sending rights",
+      "value": ""
     }
   },
   "addons": [
-    "heroku-postgresql"
+    "heroku-postgresql",
+    "sendgrid"
   ],
   "scripts": {
     "postdeploy": "MIX_ENV=prod mix ecto.migrate -r Authable.Repo"

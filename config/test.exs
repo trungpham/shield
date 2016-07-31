@@ -27,3 +27,6 @@ config :authable, Authable.Repo,
   database: "shield_test",
   hostname: "localhost",
   pool: Ecto.Adapters.SQL.Sandbox
+
+config :shield_notifier, Shield.Notifier.Mailer,
+  adapter: Bamboo.TestAdapter

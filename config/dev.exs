@@ -21,15 +21,6 @@ config :logger, :console, format: "[$level] $message\n"
 # and calculating stacktraces is usually expensive.
 config :phoenix, :stacktrace_depth, 20
 
-# Configure your database
-# config :shield, Shield.Repo,
-#   adapter: Ecto.Adapters.Postgres,
-#   username: "mustafaturan",
-#   password: "",
-#   database: "shield_dev",
-#   hostname: "localhost",
-#   pool_size: 10
-
 config :authable, Authable.Repo,
   adapter: Ecto.Adapters.Postgres,
   username: "mustafaturan",
@@ -37,3 +28,6 @@ config :authable, Authable.Repo,
   database: "shield_dev",
   hostname: "localhost",
   pool_size: 10
+
+config :shield_notifier, Shield.Notifier.Mailer,
+  adapter: Bamboo.LocalAdapter

@@ -12,7 +12,9 @@ defmodule Shield.AppController do
   plug :before_app_authorize when action in [:authorize]
   plug :before_app_delete when action in [:delete]
   plug Authable.Plug.Authenticate, [scopes: ~w(session)]
+  plug Shield.Arm.Confirmable, [enabled: Application.get_env(:shield, :confirmable)]
 
+  # GET /apps
   def index(conn, _params) do
     query = (from a in @app,
              preload: [:client],
@@ -21,6 +23,7 @@ defmodule Shield.AppController do
     render(conn, @views[:app], "index.json", apps: apps)
   end
 
+  # GET /apps/:id
   def show(conn, %{"id" => id}) do
     query = (from a in @app,
              preload: [:client],
@@ -36,6 +39,7 @@ defmodule Shield.AppController do
     end
   end
 
+  # POST /apps/authorize
   def authorize(conn, %{"app" => params}) do
     result = OAuth2.authorize_app(conn.assigns[:current_user], params)
     case result do
@@ -68,6 +72,7 @@ defmodule Shield.AppController do
     end
   end
 
+  # DELETE /apps/:id
   def delete(conn, %{"id" => id}) do
     OAuth2.revoke_app_authorization(conn.assigns[:current_user], %{"id" => id})
     conn

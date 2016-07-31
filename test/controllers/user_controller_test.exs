@@ -16,7 +16,8 @@ defmodule Shield.UserControllerTest do
     {:ok,
       conn: conn
             |> put_req_header("accept", "application/json"),
-      token_value: token.value
+      token_value: token.value,
+      user: user
     }
   end
 
@@ -30,6 +31,68 @@ defmodule Shield.UserControllerTest do
   test "a GET request without auth to /me gives forbidden error", %{conn: conn} do
     conn = get conn, user_path(conn, :me)
     assert response(conn, 403)
+  end
+
+  test "a GET request to /confirm with a valid token", %{conn: conn, user: user} do
+    token = insert(:confirmation_token, user_id: user.id)
+    params = %{confirmation_token: token.value}
+    conn = conn
+           |> get(user_path(conn, :confirm), params)
+    assert response(conn, 200)
+  end
+
+  test "a GET request to /confirm with invalid token", %{conn: conn} do
+    params = %{confirmation_token: "invalidtoken"}
+    conn = conn
+           |> get(user_path(conn, :confirm), params)
+    assert response(conn, 403)
+  end
+
+  test "a POST request to /reset_password with a valid token", %{conn: conn, user: user} do
+    token = insert(:reset_token, user_id: user.id)
+    params = %{password: "abcd1234", reset_token: token.value}
+    conn = conn
+           |> post(user_path(conn, :reset_password), params)
+    assert response(conn, 200)
+  end
+
+  test "a POST request to /reset_password with invalid token", %{conn: conn} do
+    params = %{password: "abcd1234", reset_token: "invalidtoken"}
+    conn = conn
+           |> post(user_path(conn, :reset_password), params)
+    assert response(conn, 403)
+  end
+
+  test "a POST request to /reset_password with invalid new password", %{conn: conn, user: user} do
+    token = insert(:reset_token, user_id: user.id)
+    params = %{password: "1234567", reset_token: token.value}
+    conn = conn
+           |> post(user_path(conn, :reset_password), params)
+    assert response(conn, 422)
+  end
+
+  test "a POST request to /change_password with a correct current password", %{conn: conn} do
+    params = %{password: "abcd1234", old_password: "12345678"}
+    conn = conn
+           |> sign_conn
+           |> post(user_path(conn, :change_password), params)
+    assert response(conn, 200)
+  end
+
+  test "a POST request to /change_password with wrong current password", %{conn: conn} do
+    params = %{password: "abcd1234", old_password: "wrongpass"}
+    conn = conn
+           |> sign_conn
+           |> post(user_path(conn, :change_password), params)
+    assert response(conn, 403)
+  end
+
+  test "a POST request to /change_password with invalid new password", %{conn: conn} do
+    params = %{password: "1234567", old_password: "12345678"}
+    conn = conn
+           |> sign_conn
+           |> post(user_path(conn, :change_password), params)
+    assert response(conn, 422)
   end
 
   test "a POST request to /register with valid email and password", %{conn: conn} do

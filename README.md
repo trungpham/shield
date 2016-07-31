@@ -13,70 +13,105 @@ The package can be installed as:
   1. Add shield to your list of dependencies in `mix.exs` and run `mix deps.get
 `:
 
-        def deps do
-          [{:shield, "~> 0.2.1"}]
-        end
+    ```elixir
+    def deps do
+      [{:shield, "~> 0.2.1"}]
+    end
+    ```
 
   2. Ensure shield is started before your application:
 
-        def application do
-          [applications: [:shield]]
-        end
+    ```elixir
+    def application do
+      [applications: [:shield]]
+    end
+    ```
 
   3. Add authable configurations to your `config/config.exs` file:
 
-        config :authable,
-          ecto_repos: [Authable.Repo],
-          repo: Authable.Repo,
-          resource_owner: Authable.Model.User,
-          token_store: Authable.Model.Token,
-          client: Authable.Model.Client,
-          app: Authable.Model.App,
-          expires_in: %{
-            access_token: 3600,
-            refresh_token: 24 * 3600,
-            authorization_code: 300,
-            session_token: 30 * 24 * 3600
-          },
-          grant_types: %{
-            authorization_code: Authable.GrantType.AuthorizationCode,
-            client_credentials: Authable.GrantType.ClientCredentials,
-            password: Authable.GrantType.Password,
-            refresh_token: Authable.GrantType.RefreshToken
-          },
-          auth_strategies: %{
-            headers: %{
-              "authorization" => [
-                {~r/Basic ([a-zA-Z\-_\+=]+)/, Authable.Authentication.Basic},
-                {~r/Bearer ([a-zA-Z\-_\+=]+)/, Authable.Authentication.Bearer},
-              ],
-              "x-api-token" => [
-                {~r/([a-zA-Z\-_\+=]+)/, Authable.Authentication.Bearer}
-              ]
-            },
-            query_params: %{
-              "access_token" => Authable.Authentication.Bearer
-            },
-            sessions: %{
-              "session_token" => Authable.Authentication.Session
-            }
-          },
-          scopes: ~w(read write session),
-          renderer: Authable.Renderer.RestApi
+    ```elixir
+    config :authable,
+      ecto_repos: [Authable.Repo],
+      repo: Authable.Repo,
+      resource_owner: Authable.Model.User,
+      token_store: Authable.Model.Token,
+      client: Authable.Model.Client,
+      app: Authable.Model.App,
+      expires_in: %{
+        access_token: 3600,
+        refresh_token: 24 * 3600,
+        authorization_code: 300,
+        session_token: 30 * 24 * 3600
+      },
+      grant_types: %{
+        authorization_code: Authable.GrantType.AuthorizationCode,
+        client_credentials: Authable.GrantType.ClientCredentials,
+        password: Authable.GrantType.Password,
+        refresh_token: Authable.GrantType.RefreshToken
+      },
+      auth_strategies: %{
+        headers: %{
+          "authorization" => [
+            {~r/Basic ([a-zA-Z\-_\+=]+)/, Authable.Authentication.Basic},
+            {~r/Bearer ([a-zA-Z\-_\+=]+)/, Authable.Authentication.Bearer},
+          ],
+          "x-api-token" => [
+            {~r/([a-zA-Z\-_\+=]+)/, Authable.Authentication.Bearer}
+          ]
+        },
+        query_params: %{
+          "access_token" => Authable.Authentication.Bearer
+        },
+        sessions: %{
+          "session_token" => Authable.Authentication.Session
+        }
+      },
+      scopes: ~w(read write session),
+      renderer: Authable.Renderer.RestApi
+    ```
 
-  4. Add shield configurations to your `config/config.exs` file:
+  4. Add shield notifier configurations to your `config/config.exs` file:
 
-        config :shield,
-          hooks: Shield.Hook.Default,
-          views: %{
-            changeset: Shield.ChangesetView,
-            error: Shield.ErrorView,
-            app: Shield.AppView,
-            client: Shield.ClientView,
-            token: Shield.TokenView,
-            user: Shield.UserView
-          },
-          cors_origins: ["localhost:4000", "*"]
+    ```elixir
+    config :shield_notifier,
+      channels: %{
+        email: %{
+          from: {
+            System.get_env("APP_NAME") || "Shield Notifier",
+            System.get_env("APP_FROM_EMAIL") || "no-reply@localhost"}
+        }
+      }
+    ```
+
+  5. Add your favorite mail sender Bamboo adapter configuration to your `config/prod.exs` file:
+
+    ```elixir
+    config :shield_notifier, Shield.Notifier.Mailer,
+      adapter: Bamboo.SendgridAdapter,
+      api_key: System.get_env("SENDGRID_API_KEY")
+    ```
+
+  6. Add shield configurations to your `config/config.exs` file:
+
+    ```elixir
+    config :shield,
+      confirmable: true,
+      hooks: Shield.Hook.Default,
+      views: %{
+        changeset: Shield.ChangesetView,
+        error: Shield.ErrorView,
+        app: Shield.AppView,
+        client: Shield.ClientView,
+        token: Shield.TokenView,
+        user: Shield.UserView
+      },
+      cors_origins: "http://localhost:4200, *",
+      front_end: %{
+        base: "http://localhost:4200",
+        confirmation_path: "/users/confirm?confirmation_token={{confirmation_token}}",
+        reset_password_path: "/users/reset_password?reset_token={{reset_token}}"
+      }
+    ```
 
   If you want to disable a authorization strategy, then delete it from shield configuration.
 
@@ -84,58 +119,69 @@ The package can be installed as:
 
   5. Use installer to generate controllers, views, models and migrations from originals
 
-        # Run only if you need to change behaviours, otherwise skip this.
-        mix shield.install
+    ```elixir
+    # Run only if you need to change behaviours, otherwise skip this.
+    mix shield.install
+    ```
 
   6. Add database configurations for the `Authable.Repo` on env config files:
 
-        config :authable, Authable.Repo,
-          adapter: Ecto.Adapters.Postgres,
-          username: "postgres",
-          password: "",
-          database: "",
-          hostname: "",
-          pool_size: 10
-
+    ```elixir
+    config :authable, Authable.Repo,
+      adapter: Ecto.Adapters.Postgres,
+      username: "postgres",
+      password: "",
+      database: "",
+      hostname: "",
+      pool_size: 10
+    ```
   7. Run migrations for Authable.Repo (Note: all id fields are UUID type):
 
-        mix ecto.create
-        mix ecto.migrate -r Authable.Repo
+    ```elixir
+    mix ecto.create
+    mix ecto.migrate -r Authable.Repo
+    ```
 
   8. Add routes
 
-        pipeline :api do
-          plug :accepts, ["json"]
-        end
+    ```elixir
+    pipeline :api do
+      plug :accepts, ["json"]
+    end
 
-        scope "/", Shield do
-          pipe_through :api
-          resources "/clients", ClientController, except: [:new, :edit]
+    scope "/", Shield do
+      pipe_through :api
+      resources "/clients", ClientController, except: [:new, :edit]
 
-          get     "/apps", AppController, :index
-          get     "/apps/:id", AppController, :show
-          delete  "/apps/:id", AppController, :delete
-          post    "/apps/authorize", AppController, :authorize
+      get     "/apps", AppController, :index
+      get     "/apps/:id", AppController, :show
+      delete  "/apps/:id", AppController, :delete
+      post    "/apps/authorize", AppController, :authorize
 
-          get     "/tokens/:id", TokenController, :show
-          post    "/tokens", TokenController, :create
+      get     "/tokens/:id", TokenController, :show
+      post    "/tokens", TokenController, :create
 
-          post    "/users/register", UserController, :register
-          post    "/users/login", UserController, :login
-          delete  "/users/logout", UserController, :logout
-          get     "/users/me", UserController, :me
-        end
+      post    "/users/register", UserController, :register
+      post    "/users/login", UserController, :login
+      delete  "/users/logout", UserController, :logout
+      get     "/users/me", UserController, :me
+      get     "/users/confirm", UserController, :confirm
+      post    "/users/recover_password", UserController, :recover_password
+      post    "/users/reset_password", UserController, :reset_password
+      post    "/users/change_password", UserController, :change_password
+    end
+    ```
 
   9. You are ready to go!
 
 ### Standalone
 
-        git clone git@github.com:mustafaturan/shield.git
-        cd shields
-        mix deps.get
-        mix ecto.create -r Authable.Repo
-        mix ecto.migrate -r Authable.Repo
-        mix phoenix.server
+    git clone git@github.com:mustafaturan/shield.git
+    cd shields
+    mix deps.get
+    mix ecto.create -r Authable.Repo
+    mix ecto.migrate -r Authable.Repo
+    mix phoenix.server
 
 ### Heroku
 
@@ -147,81 +193,99 @@ The package can be installed as:
 
 Inside your controller modules; add the following lines to restrict access to actions.
 
-        # Add plug to restrict access to all actions
-        plug Authable.Plug.Authenticate, [scopes: ~w(read)]
+    ```elixir
+    # Add plug to restrict access to all actions
+    plug Authable.Plug.Authenticate, [scopes: ~w(read)]
 
-        # Example inside module
+    # Example inside module
 
-        defmodule SomeModule.AppController do
-          use SomeModule.Web, :controller
-          ...
-          plug Authable.Plug.Authenticate, [scopes: ~w(read write)]
+    defmodule SomeModule.AppController do
+      use SomeModule.Web, :controller
+      ...
+      plug Authable.Plug.Authenticate, [scopes: ~w(read write)]
 
-          def index(conn, _params) do
-            # access to current user on successful authentication
-            current_user = conn.assigns[:current_user]
-            ...
-          end
+      def index(conn, _params) do
+        # access to current user on successful authentication
+        current_user = conn.assigns[:current_user]
+        ...
+      end
 
-          ...
-        end
+      ...
+    end
+    ```
 
 If you need to restrict specific resource, you may guard with when clause. Forexample, to check authentication only on :create, :update and :delete actions of your controllers.
 
-        plug Authable.Plug.Authenticate, [scopes: ~w(read write)] when action in [:create, :update, :delete]
+    ```elixir
+    plug Authable.Plug.Authenticate, [scopes: ~w(read write)] when action in [:create, :update, :delete]
+    ```
 
 Incase you do not want to allow registered user to access resources:
 
-        # Add plug `Authable.Plug.UnauthorizedOnly` for necessary actions
-        plug :Authable.Plug.UnauthorizedOnly when action in [:register]
+    ```elixir
+    # Add plug `Authable.Plug.UnauthorizedOnly` for necessary actions
+    plug :Authable.Plug.UnauthorizedOnly when action in [:register]
 
-        # Example inside module
+    # Example inside module
 
-        defmodule SomeModule.AppController do
-          use SomeModule.Web, :controller
-          ...
+    defmodule SomeModule.AppController do
+      use SomeModule.Web, :controller
+      ...
 
-          plug Authable.Plug.Authenticate, [scopes: ~w(read write)] when action in [:create]
-          plug Authable.Plug.UnauthorizedOnly when action in [:register]
+      plug Authable.Plug.Authenticate, [scopes: ~w(read write)] when action in [:create]
+      plug Authable.Plug.UnauthorizedOnly when action in [:register]
 
-          def register(conn, _params) do
-            # if user logged in, then will response automatically with
-            # unprocessable_entity 422 header and error
-            ...
-          end
+      def register(conn, _params) do
+        # if user logged in, then will response automatically with
+        # unprocessable_entity 422 header and error
+        ...
+      end
 
-          def create(conn, params) do
-            # access to current user on successful authentication
-            current_user = conn.assigns[:current_user]
-            ...
-          end
+      def create(conn, params) do
+        # access to current user on successful authentication
+        current_user = conn.assigns[:current_user]
+        ...
+      end
 
-          ...
-        end
+      ...
+    end
+    ```
 
 Manually handling authentication:
 
-        defmodule SomeModule.AppController do
-          use SomeModule.Web, :controller
-          ...
-          import Authable.Helper
+    ```elixir
+    defmodule SomeModule.AppController do
+      use SomeModule.Web, :controller
+      ...
+      import Authable.Helper
 
-          def register(conn, _params) do
-            current_user = authorize_for_resource(conn, ~w(read write))
-            if is_nil(current_user) do
-              IO.puts "not authencated!"
-            else
-              IO.puts current_user.email
-            end
-            ...
-          end
+      def register(conn, _params) do
+        current_user = authorize_for_resource(conn, ~w(read write))
+        if is_nil(current_user) do
+          IO.puts "not authencated!"
+        else
+          IO.puts current_user.email
         end
+        ...
+      end
+    end
+    ```
 
 ### Accessing resource owner info
 
 By default `Authable.Model.User` represents resource owner. To access resource owner, plug `Authable.Plug.Authenticate` must be called. Then current user information will be available by conn assignments.
 
-        conn.assigns[:current_user]
+    ```elixir
+    conn.assigns[:current_user]
+    ```
+
+### Allowing only email confirmed user to access resources
+
+To allow only confirmed user to access certain resources, you need to add confirmable plug to your controllers
+
+    ```elixir
+      plug Shield.Arm.Confirmable, [enabled: Application.get_env(:shield, :confirmable)] when action in [:me, :change_password]
+    ```
 
 ### Views
 
@@ -230,6 +294,10 @@ By default REST style views are used to represent error and data models. In shie
 ## Client Implementations
 
 Since 'shield' application is a microservice. Several client applications might be written using shield. Please do not hesitate to raise an issue with your implementation, description and demo url.
+
+### Notes
+
+API may change up to v1.0
 
 ## Contributing
 
@@ -249,11 +317,13 @@ Shield and Authable are extensible modules, you can create your strategy and sha
 
 ## Todo
 
+  - [ ] New protection arms like recaptcha and one time password protections
+
+  - [ ] EmberJS client implementation as a seperate sample app
+
   - [ ] Swagger documentation
 
   - [ ] Background job to delete expired tokens
-
-  - [ ] EmberJS client implementation as a seperate sample app
 
   - [ ] Sample resource server implementation
 
