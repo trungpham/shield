@@ -7,12 +7,13 @@ defmodule Shield.TokenController do
   @user Application.get_env(:authable, :resource_owner)
   @client Application.get_env(:authable, :client)
   @token_store Application.get_env(:authable, :token_store)
+  @renderer Application.get_env(:authable, :renderer)
   @views Application.get_env(:shield, :views)
   @hooks Application.get_env(:shield, :hooks)
-  @renderer Application.get_env(:authable, :renderer)
 
   plug :before_token_create when action in [:create]
 
+  # GET /tokens/:id
   def show(conn, %{"id" => token_value, "client_id" => client_id, "client_secret" => secret}) do
     token = @repo.get_by(@token_store, value: token_value)
     if is_nil(token) do
@@ -35,6 +36,7 @@ defmodule Shield.TokenController do
     end
   end
 
+  # POST /tokens
   def create(conn, params) do
     case OAuth2.authorize(params) do
       {:error, errors, http_status_code} ->

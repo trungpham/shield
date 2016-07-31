@@ -14,7 +14,8 @@ defmodule Shield.Factory do
   def user_factory do
     %@resource_owner{
       email: sequence(:email, &"foo-#{&1}@example.com"),
-      password: Comeonin.Bcrypt.hashpwsalt("12345678")
+      password: Comeonin.Bcrypt.hashpwsalt("12345678"),
+      settings: %{confirmed: true}
     }
   end
 
@@ -30,11 +31,27 @@ defmodule Shield.Factory do
     }
   end
 
+  def confirmation_token_factory do
+    %@token_store{
+      name: "confirmation_token",
+      value: sequence(:value, &"st#{&1}"),
+      expires_at: :os.system_time(:seconds) + 3600
+    }
+  end
+
+  def reset_token_factory do
+    %@token_store{
+      name: "reset_token",
+      value: sequence(:value, &"st#{&1}"),
+      expires_at: :os.system_time(:seconds) + 3600
+    }
+  end
+
   def session_token_factory do
     %@token_store{
       name: "session_token",
       value: sequence(:value, &"st#{&1}"),
-      expires_at: Timex.Time.now(:seconds) + 3600,
+      expires_at: :os.system_time(:seconds) + 3600,
       details: %{scope: "session,read,write"}
     }
   end
@@ -43,7 +60,7 @@ defmodule Shield.Factory do
     %@token_store{
       name: "access_token",
       value: sequence(:value, &"at#{&1}"),
-      expires_at: Timex.Time.now(:seconds) + 3600,
+      expires_at: :os.system_time(:seconds) + 3600,
       details: %{
         scope: "read",
         grant_type: "authorization_code",
@@ -55,7 +72,7 @@ defmodule Shield.Factory do
     %@token_store{
       name: "refresh_token",
       value: sequence(:value, &"rt#{&1}"),
-      expires_at: Timex.Time.now(:seconds) + 3600,
+      expires_at: :os.system_time(:seconds) + 3600,
       details: %{
         grant_type: "authorization_code",
         scope: "read"
@@ -67,7 +84,7 @@ defmodule Shield.Factory do
     %@token_store{
       name: "authorization_code",
       value: sequence(:value, &"ac#{&1}"),
-      expires_at: Timex.Time.now(:seconds) + 900,
+      expires_at: :os.system_time(:seconds) + 900,
       details: %{
         scope: "read",
         grant_type: "password",

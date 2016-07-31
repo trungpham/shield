@@ -13,7 +13,8 @@ use Mix.Config
 # which you typically run after static files are built.
 config :shield, Shield.Endpoint,
   http: [port: System.get_env("PORT")],
-  url: [scheme: System.get_env("SCHEME"), host: System.get_env("HOST_NAME"), port: 443]
+  url: [scheme: System.get_env("SCHEME"), host: System.get_env("HOST_NAME"), port: 443],
+  render_errors: [accepts: ~w(json), format: "json"]
 
 # Do not print debug messages in production
 config :logger, level: :info
@@ -77,3 +78,7 @@ config :authable, Authable.Repo,
   url: System.get_env("DATABASE_URL"),
   pool_size: String.to_integer(System.get_env("POOL_SIZE") || "20"),
   ssl: true
+
+config :shield_notifier, Shield.Notifier.Mailer,
+  adapter: Bamboo.SendgridAdapter,
+  api_key: System.get_env("SENDGRID_API_KEY")
