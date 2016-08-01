@@ -61,9 +61,9 @@ defmodule Shield.Hook do
     end
   end
 
-  @type resource_owner_t :: Authable.Model.User.t
-  @type token_store_t :: Authable.Model.Token.t
-  @type client_t :: Authable.Model.Client.t
+  @type resource_owner_t :: any
+  @type token_store_t :: any
+  @type client_t :: any
 
   @callback before_app_authorize(conn :: Plug.Conn.t, params :: any) ::
     Plug.Conn.t
