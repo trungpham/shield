@@ -10,4 +10,4 @@ services:
   - postgresql
 before_script:
   - psql -c 'create database authable_test;' -U postgres
-  - MIX_ENV=test mix do deps.get, deps.compile, ecto.create, ecto.migrate -r Authable.Repo
+  - MIX_ENV=test mix do deps.get, deps.compile, ecto.create -r Authable.Repo, ecto.migrate -r Authable.Repo
