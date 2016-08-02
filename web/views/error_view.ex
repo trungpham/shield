@@ -6,7 +6,7 @@ defmodule Shield.ErrorView do
   end
 
   def render("404.json", _assigns) do
-    %{errors: %{detail: "Not found!"}}
+    %{errors: %{details: "Not found!"}}
   end
 
   def render("422.json", _anything) do
@@ -14,7 +14,7 @@ defmodule Shield.ErrorView do
   end
 
   def render("500.json", _assigns) do
-    %{errors: %{detail: "Internal server error."}}
+    %{errors: %{details: "Internal server error."}}
   end
 
   def render("already_logged_in.json", _anything) do
