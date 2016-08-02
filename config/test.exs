@@ -22,8 +22,8 @@ config :logger, level: :warn
 
 config :authable, Authable.Repo,
   adapter: Ecto.Adapters.Postgres,
-  username: "mustafaturan",
-  password: "",
+  username: System.get_env["DATABASE_POSTGRESQL_USERNAME"] || "postgres",
+  password: System.get_env["DATABASE_POSTGRESQL_PASSWORD"] || "",
   database: "shield_test",
   hostname: "localhost",
   pool: Ecto.Adapters.SQL.Sandbox
