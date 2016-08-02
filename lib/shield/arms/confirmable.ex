@@ -33,7 +33,7 @@ defmodule Shield.Arm.Confirmable do
               limit: 1
 
     case List.first(@repo.all(query)) do
-      nil -> {:error, %{invalid_token: "Token is invalid!"}}
+      nil -> {:error, %{confirmation_token: "Token is invalid!"}}
       token ->
         @repo.delete!(token)
         update_confirm_status(token.user, true)
