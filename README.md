@@ -193,99 +193,99 @@ The package can be installed as:
 
 Inside your controller modules; add the following lines to restrict access to actions.
 
-    ```elixir
-    # Add plug to restrict access to all actions
-    plug Authable.Plug.Authenticate, [scopes: ~w(read)]
+```elixir
+# Add plug to restrict access to all actions
+plug Authable.Plug.Authenticate, [scopes: ~w(read)]
 
-    # Example inside module
+# Example inside module
 
-    defmodule SomeModule.AppController do
-      use SomeModule.Web, :controller
-      ...
-      plug Authable.Plug.Authenticate, [scopes: ~w(read write)]
+defmodule SomeModule.AppController do
+  use SomeModule.Web, :controller
+  ...
+  plug Authable.Plug.Authenticate, [scopes: ~w(read write)]
 
-      def index(conn, _params) do
-        # access to current user on successful authentication
-        current_user = conn.assigns[:current_user]
-        ...
-      end
+  def index(conn, _params) do
+    # access to current user on successful authentication
+    current_user = conn.assigns[:current_user]
+    ...
+  end
 
-      ...
-    end
-    ```
+  ...
+end
+```
 
 If you need to restrict specific resource, you may guard with when clause. Forexample, to check authentication only on :create, :update and :delete actions of your controllers.
 
-    ```elixir
-    plug Authable.Plug.Authenticate, [scopes: ~w(read write)] when action in [:create, :update, :delete]
-    ```
+```elixir
+plug Authable.Plug.Authenticate, [scopes: ~w(read write)] when action in [:create, :update, :delete]
+```
 
 Incase you do not want to allow registered user to access resources:
 
-    ```elixir
-    # Add plug `Authable.Plug.UnauthorizedOnly` for necessary actions
-    plug :Authable.Plug.UnauthorizedOnly when action in [:register]
+```elixir
+# Add plug `Authable.Plug.UnauthorizedOnly` for necessary actions
+plug :Authable.Plug.UnauthorizedOnly when action in [:register]
 
-    # Example inside module
+# Example inside module
 
-    defmodule SomeModule.AppController do
-      use SomeModule.Web, :controller
-      ...
+defmodule SomeModule.AppController do
+  use SomeModule.Web, :controller
+  ...
 
-      plug Authable.Plug.Authenticate, [scopes: ~w(read write)] when action in [:create]
-      plug Authable.Plug.UnauthorizedOnly when action in [:register]
+  plug Authable.Plug.Authenticate, [scopes: ~w(read write)] when action in [:create]
+  plug Authable.Plug.UnauthorizedOnly when action in [:register]
 
-      def register(conn, _params) do
-        # if user logged in, then will response automatically with
-        # unprocessable_entity 422 header and error
-        ...
-      end
+  def register(conn, _params) do
+    # if user logged in, then will response automatically with
+    # unprocessable_entity 422 header and error
+    ...
+  end
 
-      def create(conn, params) do
-        # access to current user on successful authentication
-        current_user = conn.assigns[:current_user]
-        ...
-      end
+  def create(conn, params) do
+    # access to current user on successful authentication
+    current_user = conn.assigns[:current_user]
+    ...
+  end
 
-      ...
-    end
-    ```
+  ...
+end
+```
 
 Manually handling authentication:
 
-    ```elixir
-    defmodule SomeModule.AppController do
-      use SomeModule.Web, :controller
-      ...
-      import Authable.Helper
+```elixir
+defmodule SomeModule.AppController do
+  use SomeModule.Web, :controller
+  ...
+  import Authable.Helper
 
-      def register(conn, _params) do
-        current_user = authorize_for_resource(conn, ~w(read write))
-        if is_nil(current_user) do
-          IO.puts "not authencated!"
-        else
-          IO.puts current_user.email
-        end
-        ...
-      end
+  def register(conn, _params) do
+    current_user = authorize_for_resource(conn, ~w(read write))
+    if is_nil(current_user) do
+      IO.puts "not authencated!"
+    else
+      IO.puts current_user.email
     end
-    ```
+    ...
+  end
+end
+```
 
 ### Accessing resource owner info
 
 By default `Authable.Model.User` represents resource owner. To access resource owner, plug `Authable.Plug.Authenticate` must be called. Then current user information will be available by conn assignments.
 
-    ```elixir
-    conn.assigns[:current_user]
-    ```
+```elixir
+conn.assigns[:current_user]
+```
 
 ### Allowing only email confirmed user to access resources
 
 To allow only confirmed user to access certain resources, you need to add confirmable plug to your controllers
 
-    ```elixir
-      plug Shield.Arm.Confirmable, [enabled: Application.get_env(:shield, :confirmable)] when action in [:me, :change_password]
-    ```
+```elixir
+  plug Shield.Arm.Confirmable, [enabled: Application.get_env(:shield, :confirmable)] when action in [:me, :change_password]
+```
 
 ### Views
 
