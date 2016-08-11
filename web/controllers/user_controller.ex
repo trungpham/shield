@@ -86,9 +86,13 @@ defmodule Shield.UserController do
   end
 
   # POST /users/login
-  def login(conn, %{"user" => user_params}) do
-    user = @repo.get_by(@user, email: user_params["email"])
-    try_login(conn, user, user_params)
+  def login(conn, %{"user" => %{"email" => email, "password" => password}}) when is_binary(password) and is_binary(email) do
+    user = @repo.get_by(@user, email: email)
+    try_login(conn, user, password)
+  end
+  def login(conn, _) do
+    conn |> @renderer.render(:unprocessable_entity, %{errors:
+      %{details: "Invalid email or password format!"}})
   end
 
   # DELETE /users/logout
@@ -104,16 +108,15 @@ defmodule Shield.UserController do
     |> send_resp(:no_content, "")
   end
 
-  defp try_login(conn, nil, _user_params) do
+  defp try_login(conn, nil, _) do
     {http_status_code, errors} = {:unauthorized,
       %{email: "Email could not found."}}
     conn
     |> @hooks.after_user_login_failure(errors, http_status_code)
     |> @renderer.render(http_status_code, %{errors: errors})
   end
-  defp try_login(conn, _user, false) do
-    {http_status_code, errors} = {:unauthorized,
-      %{password: "Email, password combination is wrong."}}
+  defp try_login(conn, _, false) do
+    {http_status_code, errors} = {:unauthorized, %{password: "Wrong password!"}}
     conn
     |> @hooks.after_user_login_failure(errors, http_status_code)
     |> @renderer.render(http_status_code, %{errors: errors})
@@ -122,10 +125,8 @@ defmodule Shield.UserController do
     try_login(conn, user, true,
       @confirmable && Map.get(user.settings || %{}, "confirmed", false))
   end
-  defp try_login(conn, user, user_params) do
-    try_login(conn, user,
-      match_with_user_password(user_params["password"], user))
-  end
+  defp try_login(conn, user, password), do:
+    try_login(conn, user, match_with_user_password(password, user))
   defp try_login(conn, user, true, false) do
     conn
     |> @renderer.render(:unauthorized, %{errors: %{email:
