@@ -8,6 +8,7 @@ defmodule Shield.AppController do
   @token_store Application.get_env(:authable, :token_store)
   @client Application.get_env(:authable, :client)
   @views Application.get_env(:shield, :views)
+  @renderer Application.get_env(:authable, :renderer)
 
   plug :before_app_authorize when action in [:authorize]
   plug :before_app_delete when action in [:delete]
@@ -46,8 +47,7 @@ defmodule Shield.AppController do
     {:error, errors, http_status_code} ->
       conn
       |> @hooks.after_app_authorize_failure(errors, http_status_code)
-      |> put_status(http_status_code)
-      |> render(@views[:error], "422.json")
+      |> @renderer.render(http_status_code, %{errors: errors})
     app ->
       changeset = @token_store.authorization_code_changeset(%@token_store{}, %{
         user_id: conn.assigns[:current_user].id,
