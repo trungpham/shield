@@ -260,11 +260,11 @@ defmodule SomeModule.AppController do
   import Authable.Helper
 
   def register(conn, _params) do
-    current_user = authorize_for_resource(conn, ~w(read write))
-    if is_nil(current_user) do
-      IO.puts "not authencated!"
-    else
-      IO.puts current_user.email
+    required_scopes = ~w(session)
+    case authorize_for_resource(conn, required_scopes) do
+      {:ok, current_user} -> IO.puts(current_user.email)
+      {:error, errors, _} -> IO.inspect(errors)
+      nil -> IO.puts("not authencated!")
     end
     ...
   end
