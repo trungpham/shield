@@ -34,6 +34,37 @@ defmodule Shield.ClientViewTest do
       }}
   end
 
+  test "renders show.json if is_owner", %{client: client} do
+    assert render(ClientView, "show.json", %{client: client, is_owner: true}) ==
+      %{client: %{
+        id: client.id,
+        name: client.name,
+        redirect_uri: client.redirect_uri,
+        secret: client.secret,
+        settings: client.settings
+      }}
+  end
+
+  test "renders show.json unless is_owner", %{client: client} do
+    assert render(ClientView, "show.json", %{client: client, is_owner: false}) ==
+      %{client: %{
+        id: client.id,
+        name: client.name,
+        redirect_uri: client.redirect_uri,
+        settings: client.settings
+      }}
+  end
+
+  test "renders show.json if is_owner is nil", %{client: client} do
+    assert render(ClientView, "show.json", %{client: client, is_owner: nil}) ==
+      %{client: %{
+        id: client.id,
+        name: client.name,
+        redirect_uri: client.redirect_uri,
+        settings: client.settings
+      }}
+  end
+
   test "renders client.json", %{client: client} do
     assert render(ClientView, "client.json", %{client: client}) ==
       %{
