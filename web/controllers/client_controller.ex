@@ -11,7 +11,7 @@ defmodule Shield.ClientController do
   plug :before_client_create when action in [:create]
   plug :before_client_update when action in [:update]
   plug :before_client_delete when action in [:delete]
-  plug Authable.Plug.Authenticate, [scopes: ~w(session)]
+  plug Authable.Plug.Authenticate, [scopes: ~w(session)] when action in [:index, :create, :update, :delete]
   plug Shield.Arm.Confirmable, [enabled: Application.get_env(:shield, :confirmable)]
 
   # GET /clients
@@ -46,15 +46,18 @@ defmodule Shield.ClientController do
 
   # GET /clients/:id
   def show(conn, %{"id" => id}) do
-    case @repo.get_by(@client, id: id,
-                       user_id: conn.assigns[:current_user].id) do
+    conn = conn |> assign_current_user
+    case @repo.get(@client, id) do
       nil    ->
         conn
         |> put_status(:not_found)
         |> render(@views[:error], "404.json")
       client ->
+        is_owner = conn.assigns[:current_user] &&
+          conn.assigns[:current_user].id == client.user_id
         conn
-        |> render(@views[:client], "show.json", client: client)
+        |> render(@views[:client], "show.json", client: client,
+             is_owner: is_owner)
     end
   end
 
@@ -88,5 +91,15 @@ defmodule Shield.ClientController do
     conn
     |> @hooks.after_client_delete
     |> send_resp(:no_content, "")
+  end
+
+  defp assign_current_user(conn) do
+    user = case Authable.Helper.authorize_for_resource(conn, ~w(session)) do
+      {:ok, user} ->
+        user
+      _ ->
+        nil
+    end
+    assign(conn, :current_user, user)
   end
 end
