@@ -27,7 +27,7 @@ config :shield,
   front_end: %{
     base: "http://localhost:4200",
     confirmation_path: "/users/confirm?confirmation_token={{confirmation_token}}",
-    reset_password_path: "/users/reset_password?reset_token={{reset_token}}"
+    reset_password_path: "/users/reset-password?reset_token={{reset_token}}"
   }
 
 config :authable,
