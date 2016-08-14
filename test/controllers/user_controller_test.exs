@@ -56,6 +56,17 @@ defmodule Shield.UserControllerTest do
     assert response(conn, 200)
   end
 
+  test "a POST request to /reset_password with a valid token and ensure that is not valid anymore", %{conn: conn, user: user} do
+    token = insert(:reset_token, user_id: user.id)
+    params = %{password: "abcd1234", reset_token: token.value}
+    conn = conn
+           |> post(user_path(conn, :reset_password), params)
+    assert response(conn, 200)
+    conn = conn
+           |> post(user_path(conn, :reset_password), params)
+    assert response(conn, 403)
+  end
+
   test "a POST request to /reset_password with invalid token", %{conn: conn} do
     params = %{password: "abcd1234", reset_token: "invalidtoken"}
     conn = conn
