@@ -188,8 +188,10 @@ defmodule Shield.UserController do
     conn |> @renderer.render(:forbidden, %{errors: %{reset_token:
       "Invalid token."}})
   end
-  defp reset_password(conn, token, password), do: change_password(conn, true,
-    token.user, password)
+  defp reset_password(conn, token, password) do
+    @repo.delete!(token)
+    change_password(conn, true, token.user, password)
+  end
 
   defp change_password(conn, false, _, _) do
     conn |> @renderer.render(:forbidden, %{errors: %{old_password:
