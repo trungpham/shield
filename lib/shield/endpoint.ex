@@ -1,8 +1,9 @@
 defmodule Shield.Endpoint do
   use Phoenix.Endpoint, otp_app: :shield
 
-  @cors_origins String.split(Application.get_env(:shield, :cors_origins),
-                  ",", trim: true)
+  @cors_origins Application.get_env(:shield, :cors_origins)
+                |> String.replace(~r/([\s]+)/, "")
+                |> String.split(",", trim: true)
 
   # Serve at "/" the static files from "priv/static" directory.
   #
