@@ -23,11 +23,11 @@ config :shield,
     token: Shield.TokenView,
     user: Shield.UserView
   },
-  cors_origins: "http://localhost:4200, *",
+  cors_origins: "*",
   front_end: %{
-    base: "http://localhost:4200",
-    confirmation_path: "/users/confirm?confirmation_token={{confirmation_token}}",
-    reset_password_path: "/users/reset-password?reset_token={{reset_token}}"
+    base: "https://shield-ui.herokuapp.com",
+    confirmation_path: "/#/users/confirm?confirmation_token={{confirmation_token}}",
+    reset_password_path: "/#/users/reset-password?reset_token={{reset_token}}"
   }
 
 config :authable,
@@ -73,8 +73,8 @@ config :shield_notifier,
   channels: %{
     email: %{
       from: {
-        System.get_env("APP_NAME") || "Shield Notifier",
-        System.get_env("APP_FROM_EMAIL") || "no-reply@localhost"}
+        System.get_env("APP_NAME") || "shield-ui.herokuapp.com",
+        System.get_env("APP_FROM_EMAIL") || "no-reply@shield-ui.herokuapp.com"}
     }
   }
 
