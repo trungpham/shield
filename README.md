@@ -319,7 +319,7 @@ Shield and Authable are extensible modules, you can create your strategy and sha
 
   - [ ] New protection arms like recaptcha and one time password protections
 
-  - [ ] EmberJS client implementation as a seperate sample app
+  - [x] EmberJS client implementation as a seperate sample app: https://github.com/mustafaturan/shield/tree/ui
 
   - [ ] Swagger documentation
 
