@@ -26,4 +26,18 @@ defmodule Shield.Router do
     post    "/users/reset_password", UserController, :reset_password
     post    "/users/change_password", UserController, :change_password
   end
+
+  pipeline :browser do
+    plug :accepts, ["html"]
+    plug :fetch_session
+    plug :fetch_flash
+    plug :protect_from_forgery
+    plug :put_secure_browser_headers
+  end
+
+  scope "/", Shield do
+    pipe_through :browser
+
+    get "/", PageController, :index
+  end
 end

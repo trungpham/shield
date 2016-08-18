@@ -1,8 +1,8 @@
 {
-  "name": "Shield",
-  "description": "OAuth2 provider microservice endpoints.",
-  "repository": "https://github.com/mustafaturan/shield",
-  "keywords": ["phoenix", "oauth2", "microservice", "shield"],
+  "name": "Shield UI",
+  "description": "OAuth2 provider microservice endpoints, with simple ember client.",
+  "repository": "https://github.com/mustafaturan/shield/tree/ui",
+  "keywords": ["phoenix", "oauth2", "microservice", "shield", "ember"],
   "buildpacks": [
     {
       "url": "https://github.com/HashNuke/heroku-buildpack-elixir.git"

@@ -43,7 +43,8 @@ defmodule Shield.Mixfile do
      {:cors_plug, "~> 1.1"},
      {:ex_machina, "~> 1.0.1", only: :test},
      {:credo, "~> 0.4.5", only: [:dev, :test]},
-     {:ex_doc, ">= 0.0.0", only: :dev}
+     {:ex_doc, ">= 0.0.0", only: :dev},
+     {:phoenix_html, "~> 2.6"}
    ]
   end
 
