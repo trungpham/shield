@@ -9,7 +9,7 @@
     <link href='https://fonts.googleapis.com/css?family=Open+Sans+Condensed:300' rel='stylesheet' type='text/css'>
 
 
-<meta name="shield-mbr/config/environment" content="%7B%22modulePrefix%22%3A%22shield-mbr%22%2C%22environment%22%3A%22production%22%2C%22rootURL%22%3A%22/%22%2C%22locationType%22%3A%22hash%22%2C%22EmberENV%22%3A%7B%22FEATURES%22%3A%7B%7D%7D%2C%22APP%22%3A%7B%22name%22%3A%22shield-mbr%22%2C%22version%22%3A%220.0.0+3e5442cd%22%7D%2C%22ember-simple-auth%22%3A%7B%22store%22%3A%22simple-auth-session-store%3Acookie%22%2C%22authenticationRoute%22%3A%22users.login%22%2C%22crossOriginWhitelist%22%3A%5B%22http%3A//localhost%3A4000/%22%5D%2C%22routeAfterAuthentication%22%3A%22apps.index%22%2C%22routeIfAlreadyAuthenticated%22%3A%22apps.index%22%7D%2C%22appName%22%3A%22Shield%22%2C%22appNameCapitalized%22%3A%22SHIELD%22%2C%22appNamespace%22%3A%22shield%22%2C%22apiBaseUri%22%3A%22%22%2C%22something%22%3A%22test%22%2C%22exportApplicationGlobal%22%3Afalse%7D" />
+<meta name="shield-mbr/config/environment" content="%7B%22modulePrefix%22%3A%22shield-mbr%22%2C%22environment%22%3A%22production%22%2C%22rootURL%22%3A%22/%22%2C%22locationType%22%3A%22hash%22%2C%22EmberENV%22%3A%7B%22FEATURES%22%3A%7B%7D%7D%2C%22APP%22%3A%7B%22name%22%3A%22shield-mbr%22%2C%22version%22%3A%220.0.0+dcf632a1%22%7D%2C%22ember-simple-auth%22%3A%7B%22store%22%3A%22simple-auth-session-store%3Acookie%22%2C%22authenticationRoute%22%3A%22users.login%22%2C%22crossOriginWhitelist%22%3A%5B%22http%3A//localhost%3A4000/%22%5D%2C%22routeAfterAuthentication%22%3A%22apps.index%22%2C%22routeIfAlreadyAuthenticated%22%3A%22apps.index%22%7D%2C%22appName%22%3A%22Shield%22%2C%22appNameCapitalized%22%3A%22SHIELD%22%2C%22appNamespace%22%3A%22shield%22%2C%22apiBaseUri%22%3A%22%22%2C%22something%22%3A%22test%22%2C%22exportApplicationGlobal%22%3Afalse%7D" />
 
     <link rel="stylesheet" href="/assets/vendor-d41d8cd98f00b204e9800998ecf8427e.css" integrity="sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU= sha512-z4PhNX7vuL3xVChQ1m2AB9Yg5AULVxXcg/SpIdNs6c5H0NE8XYXysP+DGNKHfuwvY7kxvUdBeoGlODJ6+SfaPg==" >
     <link rel="stylesheet" href="/assets/shield-mbr-9acfb869aad258ba11aa772e55b6e825.css" integrity="sha256-2wY8hb5Xl8tgbwM4LciPHEHZevmHX1b6qqkj7mGJ2VM= sha512-H5feWb2RtXnUb5FUJVQc/epCvoNCujjDaxWpntcMOr6Qy2gjek+3OsHSTSUzU8MTsyP/HpIJr3oNV6fGzVEz1Q==" >
@@ -21,7 +21,7 @@
 
 
     <script src="/assets/vendor-25b53059b45b0df867f64c80ce9f6868.js" integrity="sha256-B/xnZ24gry0716cwf02xsha/gcu24YK143RESMJMP2g= sha512-ckLZmPtPODfblmog2dFfi0Pd9+ZsrCwSkLRQAnxpJLkmK3jw1uI/EieeOIWuQxKD+T3WMz+vusgkgHNp37lZog==" ></script>
-    <script src="/assets/shield-mbr-01e28f091ff744f29e9f33ab42715755.js" integrity="sha256-hj8AoDGMMmmCIhWIgXfwf7+CT0SpaZWvxBc9mPPiuMQ= sha512-GAfJ25Mdjfttzm1egdH1ZqiDyCUdQspA2bbF+19QxYsdcs+YCpGLp6INT5IoReJHtGGJXjguASXxiDtgrvpUIw==" ></script>
+    <script src="/assets/shield-mbr-e7b9b68b67de48898da3a2cca1c7ece5.js" integrity="sha256-PCd6RMa0P5uWyHWE1t2mzoRuvx04TIZeRMeD1C217kA= sha512-O2v7x8f4a2jhW7/30vny2t9A2hbpz9N2mG3RXRBrl1QHek6G2EH2BzkIBDWJVP15zUXqBhyxmJcc2LdX6b/0Og==" ></script>
 
 
   </body>
