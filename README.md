@@ -291,6 +291,53 @@ To allow only confirmed user to access certain resources, you need to add confir
 
 By default REST style views are used to represent error and data models. In shield configuration, it is possible to change view modules to represent non-rest style data models like JSON-API or any other data model.
 
+## Hooks
+
+In shield package; by default hooks do nothing, but when you need to implement a callback after or before execution of functions, it might be very useful. All you need to do is create a module that use the hook behaviour module and then update the config.exs.
+
+Sample module implementation:
+
+```elixir
+defmodule Shield.Hook.Sample do
+  use Shield.Hook
+  ...
+
+  def before_app_authorize(conn, params) do
+    # do sth...
+    conn
+  end
+  ...
+end
+```
+
+Here is supported hooks and return types:
+
+```elixir
+def before_app_authorize(conn, _), do: conn
+def after_app_authorize_failure(conn, errors, status), do: conn
+def after_app_authorize_success(conn, token), do: conn
+def before_app_delete(conn, _), do: conn
+def after_app_delete(conn), do: conn
+def before_client_create(conn, _), do: conn
+def after_client_create_success(conn, client), do: conn
+def after_client_create_failure(conn, changeset), do: conn
+def before_client_update(conn, _), do: conn
+def after_client_update_failure(conn, changeset), do: conn
+def after_client_update_success(conn, client), do: conn
+def before_client_delete(conn, _), do: conn
+def after_client_delete(conn), do: conn
+def before_token_create(conn, _), do: conn
+def after_token_create_failure(conn, errors, status), do: conn
+def after_token_create_success(conn, token), do: conn
+def before_user_register(conn, _), do: conn
+def after_user_register_failure(conn, changeset), do: conn
+def after_user_register_success(conn, user), do: conn
+def before_user_login(conn, _), do: conn
+def after_user_login_failure(conn, errors, http_status_code), do: conn
+def after_user_login_token_failure(conn, changeset), do: conn
+def after_user_login_token_success(conn, token), do: conn
+```
+
 ## Client Implementations
 
 Since 'shield' application is a microservice. Several client applications might be written using shield. Please do not hesitate to raise an issue with your implementation, description and demo url.
