@@ -52,7 +52,7 @@ defmodule Shield.UserControllerTest do
     token = insert(:reset_token, user_id: user.id)
     params = %{password: "abcd1234", reset_token: token.value}
     conn = conn
-           |> post(user_path(conn, :reset_password), params)
+           |> post(user_path(conn, :reset_password), user: params)
     assert response(conn, 200)
   end
 
@@ -60,17 +60,17 @@ defmodule Shield.UserControllerTest do
     token = insert(:reset_token, user_id: user.id)
     params = %{password: "abcd1234", reset_token: token.value}
     conn = conn
-           |> post(user_path(conn, :reset_password), params)
+           |> post(user_path(conn, :reset_password), user: params)
     assert response(conn, 200)
     conn = conn
-           |> post(user_path(conn, :reset_password), params)
+           |> post(user_path(conn, :reset_password), user: params)
     assert response(conn, 403)
   end
 
   test "a POST request to /reset_password with invalid token", %{conn: conn} do
     params = %{password: "abcd1234", reset_token: "invalidtoken"}
     conn = conn
-           |> post(user_path(conn, :reset_password), params)
+           |> post(user_path(conn, :reset_password), user: params)
     assert response(conn, 403)
   end
 
@@ -78,7 +78,7 @@ defmodule Shield.UserControllerTest do
     token = insert(:reset_token, user_id: user.id)
     params = %{password: "1234567", reset_token: token.value}
     conn = conn
-           |> post(user_path(conn, :reset_password), params)
+           |> post(user_path(conn, :reset_password), user: params)
     assert response(conn, 422)
   end
 
@@ -86,7 +86,7 @@ defmodule Shield.UserControllerTest do
     params = %{password: "abcd1234", old_password: "12345678"}
     conn = conn
            |> sign_conn
-           |> post(user_path(conn, :change_password), params)
+           |> post(user_path(conn, :change_password), user: params)
     assert response(conn, 200)
   end
 
@@ -94,7 +94,7 @@ defmodule Shield.UserControllerTest do
     params = %{password: "abcd1234", old_password: "wrongpass"}
     conn = conn
            |> sign_conn
-           |> post(user_path(conn, :change_password), params)
+           |> post(user_path(conn, :change_password), user: params)
     assert response(conn, 403)
   end
 
@@ -102,7 +102,7 @@ defmodule Shield.UserControllerTest do
     params = %{password: "1234567", old_password: "12345678"}
     conn = conn
            |> sign_conn
-           |> post(user_path(conn, :change_password), params)
+           |> post(user_path(conn, :change_password), user: params)
     assert response(conn, 422)
   end
 
