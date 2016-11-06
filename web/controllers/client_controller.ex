@@ -65,6 +65,8 @@ defmodule Shield.ClientController do
   def update(conn, %{"id" => id, "client" => client_params}) do
     client = @repo.get_by!(@client, id: id,
                            user_id: conn.assigns[:current_user].id)
+    client_params = Map.put(client_params, "user_id",
+                            conn.assigns[:current_user].id)
     changeset = @client.changeset(client, client_params)
 
     case @repo.update(changeset) do
