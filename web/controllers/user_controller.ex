@@ -44,12 +44,12 @@ defmodule Shield.UserController do
   end
 
   # POST /users/recover-password
-  def recover_password(conn, %{"email" => email}) do
+  def recover_password(conn, %{"user" => %{"email" => email}}) do
     recover_user_password(conn, @repo.get_by(@user, email: email))
   end
 
   # POST /users/reset-password
-  def reset_password(conn, %{"password" => new_password, "reset_token" => reset_token}) do
+  def reset_password(conn, %{"user" => %{"password" => new_password, "reset_token" => reset_token}}) do
     query = from t in @token_store,
           where: t.value == ^reset_token and
           t.name == "reset_token" and
@@ -61,7 +61,7 @@ defmodule Shield.UserController do
   end
 
   # POST /users/change-password
-  def change_password(conn, %{"password" => new_password, "old_password" => old_password}) do
+  def change_password(conn, %{"user" => %{"password" => new_password, "old_password" => old_password}}) do
     change_password(conn,
       match_with_user_password(old_password, conn.assigns[:current_user]),
       conn.assigns[:current_user], new_password)
