@@ -1,0 +1,572 @@
+swagger: '2.0'
+info:
+  title: SHIELD API
+  description: Shield Microservice API Endpoints and Samples
+  version: "0.3.3"
+host: shield-api.herokuapp.com
+schemes:
+  - https
+basePath: /
+
+consumes:
+  - application/json
+
+produces:
+  - application/json
+
+paths:
+  /clients:
+    get:
+      description: |
+        List OAuth2 clients
+      tags:
+        - Client
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: "#/definitions/ClientIndexResponseBody"
+    post:
+      description: |
+        Creates an OAuth2 client
+      tags:
+        - Client
+      parameters:
+        - in: body
+          name: json
+          description: Partial client object
+          required: true
+          schema:
+            $ref: "#/definitions/ClientCreateRequestBody"
+      responses:
+        '201':
+          description: Created
+          schema:
+            $ref: "#/definitions/ClientCreateResponseBody"
+  /clients/{client_id}:
+    parameters:
+      - $ref: '#/parameters/client_id'
+    get:
+      description: |
+        Shows an OAuth2 client by id
+      tags:
+        - Client
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: "#/definitions/ClientShowResponseBody"
+    put:
+      description: |
+        Updates an OAuth2 client
+      tags:
+        - Client
+      parameters:
+        - in: body
+          name: json
+          description: Partial client object
+          required: false
+          schema:
+            $ref: "#/definitions/ClientUpdateRequestBody"
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: "#/definitions/ClientUpdateResponseBody"
+    patch:
+      description: |
+        Updates an OAuth2 client
+      tags:
+        - Client
+      parameters:
+        - in: body
+          name: json
+          description: Client object
+          required: false
+          schema:
+            $ref: "#/definitions/ClientUpdateRequestBody"
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: "#/definitions/ClientUpdateResponseBody"
+    delete:
+      description: |
+        Deletes an OAuth2 client by id
+      tags:
+        - Client
+      responses:
+        '204':
+          description: No content
+  /apps:
+    get:
+      description: |
+        List OAuth2 apps
+      tags:
+        - App
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: "#/definitions/AppIndexResponseBody"
+  /apps/authorize:
+    post:
+      description: |
+        Authorizes an OAuth2 client for an user
+      tags:
+        - App
+      parameters:
+        - in: body
+          name: json
+          description: App object
+          required: true
+          schema:
+            $ref: "#/definitions/AppCreateRequestBody"
+      responses:
+        '201':
+          description: Created
+          schema:
+            $ref: "#/definitions/AppCreateResponseBody"
+  /apps/{app_id}:
+    parameters:
+      - $ref: '#/parameters/app_id'
+    get:
+      description: |
+        Shows an OAuth2 app by id
+      tags:
+        - App
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: "#/definitions/AppShowResponseBody"
+    delete:
+      description: |
+        Deletes an OAuth2 app by id
+      tags:
+        - App
+      responses:
+        '204':
+          description: No content
+  /tokens:
+    post:
+      summary: Creates an OAuth2 access token.
+      description: |
+        Creates an OAuth2 access token using
+        'authorization code',
+        'refresh token',
+        'password' and
+        'client credentials' grant types.
+      tags:
+        - Token
+      parameters:
+        - in: body
+          name: json
+          description: Token create options
+          required: true
+          schema:
+            $ref: "#/definitions/TokenCreateRequestBody"
+      responses:
+        '201':
+          description: Created
+          schema:
+            $ref: "#/definitions/TokenCreateResponseBody"
+  /tokens/{token_value}:
+    parameters:
+      - $ref: '#/parameters/token_value'
+    get:
+      summary: Shows an OAuth2 token details.
+      description: |
+        Displays token details using client crendetials. This endpoint generally
+        used for verifying tokens.
+      tags:
+        - Token
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: "#/definitions/TokenShowResponseBody"
+  /users/register:
+    post:
+      summary: User registration endpoint.
+      description: |
+        Creates a new OAuth2 resource owner.
+      tags:
+        - User
+        - Resource Owner
+      parameters:
+        - in: body
+          name: json
+          description: User registration options
+          required: true
+          schema:
+            $ref: "#/definitions/UserRegisterRequestBody"
+      responses:
+        '201':
+          description: Created
+          schema:
+            $ref: "#/definitions/UserRegisterResponseBody"
+  /users/login:
+    post:
+      summary: User login endpoint.
+      description: |
+        Creates a new cookie for OAuth2 resource owner.
+      tags:
+        - User
+        - Resource Owner
+      parameters:
+        - in: body
+          name: json
+          description: User login options
+          required: true
+          schema:
+            $ref: "#/definitions/UserLoginRequestBody"
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: "#/definitions/UserLoginResponseBody"
+  /users/logout:
+    delete:
+      summary: Logout
+      description: |
+        Deletes the cookie for OAuth2 resource owner.
+      tags:
+        - User
+        - Resource Owner
+      responses:
+        '204':
+          description: No content
+  /users/me:
+    get:
+      summary: Basic info
+      description: |
+        Shows the information for OAuth2 resource owner.
+      tags:
+        - User
+        - Resource Owner
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: "#/definitions/UserMeResponseBody"
+  /users/confirm:
+    get:
+      summary: Email confirmation
+      description: |
+        Confirms user's email address using confirmation token.
+      tags:
+        - User
+        - Resource Owner
+      parameters:
+        - in: query
+          name: confirmation_token
+          description: User confirmation token
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: "#/definitions/UserConfirmResponseBody"
+  /users/recover_password:
+    post:
+      summary: Sends password recovery link
+      description: |
+        Sends recovery link to user's email address for the new password setup.
+      tags:
+        - User
+        - Resource Owner
+      parameters:
+        - in: body
+          name: json
+          description: User password recovery options
+          required: true
+          schema:
+            $ref: "#/definitions/UserRecoverPasswordRequestBody"
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: "#/definitions/UserRecoverPasswordResponseBody"
+  /users/reset_password:
+    post:
+      summary: Changes password
+      description: |
+        Set new password using reset token.
+      tags:
+        - User
+        - Resource Owner
+      parameters:
+        - in: body
+          name: json
+          description: User reset recovery options
+          required: true
+          schema:
+            $ref: "#/definitions/UserResetPasswordRequestBody"
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: "#/definitions/UserResetPasswordResponseBody"
+  /users/change_password:
+    post:
+      summary: Changes password
+      description: |
+        Set new password using old password.
+      tags:
+        - User
+        - Resource Owner
+      parameters:
+        - in: body
+          name: json
+          description: User change password options
+          required: true
+          schema:
+            $ref: "#/definitions/UserChangePasswordRequestBody"
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: "#/definitions/UserChangePasswordResponseBody"
+parameters:
+  client_id:
+    name: client_id
+    in: path
+    description: client identifier
+    required: true
+    type: string
+  app_id:
+    name: app_id
+    in: path
+    description: app identifier
+    required: true
+    type: string
+  token_value:
+    name: token_value
+    in: path
+    description: token value
+    required: true
+    type: string
+definitions:
+  User:
+    type: object
+    properties:
+      id:
+        type: string
+      email:
+        type: string
+      settings:
+        type: string
+  Token:
+    properties:
+      name:
+        type: string
+      value:
+        type: string
+      expires_at:
+        type: integer
+        format: int64
+      details:
+        type: string
+  Client:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      secret:
+        type: string
+      redirect_uri:
+        type: string
+      settings:
+        type: object
+  App:
+    properties:
+      id:
+        type: string
+      scope:
+        type: string
+      client:
+        $ref: "#/definitions/Client"
+  ClientIndexResponseBody:
+    properties:
+      clients:
+        type: array
+        items:
+          $ref: "#/definitions/Client"
+  ClientCreateRequestBody:
+    properties:
+      client:
+        properties:
+          name:
+            type: string
+          redirect_uri:
+            type: string
+          settings:
+            type: object
+  ClientCreateResponseBody:
+    properties:
+      client:
+        $ref: "#/definitions/Client"
+  ClientUpdateRequestBody:
+    properties:
+      client:
+        properties:
+          name:
+            type: string
+          redirect_uri:
+            type: string
+          settings:
+            type: object
+  ClientUpdateResponseBody:
+    properties:
+      client:
+        $ref: "#/definitions/Client"
+  ClientShowResponseBody:
+    properties:
+      client:
+        $ref: "#/definitions/Client"
+  AppIndexResponseBody:
+    properties:
+      apps:
+        type: array
+        items:
+          $ref: "#/definitions/App"
+  AppCreateRequestBody:
+    properties:
+      app:
+        properties:
+          client_id:
+            type: string
+          redirect_uri:
+            type: string
+          scope:
+            type: string
+  AppCreateResponseBody:
+    properties:
+      app:
+        $ref: "#/definitions/App"
+  AppShowResponseBody:
+    properties:
+      app:
+        $ref: "#/definitions/App"
+  TokenCreateRequestBody:
+    properties:
+      token:
+        properties:
+          grant_type:
+            type: string
+          client_id:
+            type: string
+          client_secret:
+            type: string
+          refresh_token:
+            type: string
+          email:
+            type: string
+          password:
+            type: string
+          secret:
+            type: string
+          redirect_uri:
+            type: string
+          code:
+            type: string
+  TokenCreateResponseBody:
+    properties:
+      token:
+        $ref: "#/definitions/Token"
+  TokenShowResponseBody:
+    properties:
+      token:
+        $ref: "#/definitions/Token"
+  UserRegisterRequestBody:
+    properties:
+      user:
+        properties:
+          email:
+            type: string
+          password:
+            type: string
+            format: password
+  UserRegisterResponseBody:
+    properties:
+      user:
+        $ref: "#/definitions/User"
+  UserLoginRequestBody:
+    properties:
+      user:
+        properties:
+          email:
+            type: string
+          password:
+            type: string
+            format: password
+  UserLoginResponseBody:
+    properties:
+      user:
+        $ref: "#/definitions/User"
+  UserMeResponseBody:
+    properties:
+      user:
+        $ref: "#/definitions/User"
+  UserConfirmResponseBody:
+    properties:
+      messages:
+        type: string
+  UserRecoverPasswordRequestBody:
+    properties:
+      user:
+        properties:
+          email:
+            type: string
+  UserRecoverPasswordResponseBody:
+    properties:
+      messages:
+        type: string
+  UserResetPasswordRequestBody:
+    properties:
+      user:
+        properties:
+          reset_token:
+            type: string
+          password:
+            type: string
+            format: password
+  UserResetPasswordResponseBody:
+    properties:
+      messages:
+        type: string
+  UserChangePasswordRequestBody:
+    properties:
+      user:
+        properties:
+          old_password:
+            type: string
+          password:
+            type: string
+            format: password
+  UserChangePasswordResponseBody:
+    properties:
+      messages:
+        type: string
+
+securityDefinitions:
+  cookieAuth:
+    type: apiKey
+    in: header
+    name: cookie
+  accessToken:
+    type: apiKey
+    in: query
+    name: access_token
+  oauthTwoAccess:
+    type: oauth2
+    authorizationUrl: "https://shield-ui.herokuapp.com/#/oauth2/authorize?client_id=&scope=&redirect_uri="
+    tokenUrl: "https://shield-ui.herokuapp.com/tokens"
+    flow: accessCode
+    scopes:
+      - read: Read
+      - write: Wrie
+      - session: Only with session access rights
