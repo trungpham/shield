@@ -14,6 +14,13 @@ consumes:
 produces:
   - application/json
 
+security:
+  - oauthTwoAccess:
+    - read
+    - write
+    - session
+  - cookieAuth: []
+
 paths:
   /clients:
     get:
@@ -26,6 +33,11 @@ paths:
           description: Ok
           schema:
             $ref: "#/definitions/ClientIndexResponseBody"
+      security:
+        - oauthTwoAccess:
+          - session
+          - read
+        - cookieAuth: []
     post:
       description: |
         Creates an OAuth2 client
@@ -43,6 +55,12 @@ paths:
           description: Created
           schema:
             $ref: "#/definitions/ClientCreateResponseBody"
+      security:
+        - oauthTwoAccess:
+          - session
+          - read
+          - write
+        - cookieAuth: []
   /clients/{client_id}:
     parameters:
       - $ref: '#/parameters/client_id'
@@ -73,6 +91,12 @@ paths:
           description: Ok
           schema:
             $ref: "#/definitions/ClientUpdateResponseBody"
+      security:
+        - oauthTwoAccess:
+          - session
+          - read
+          - write
+        - cookieAuth: []
     patch:
       description: |
         Updates an OAuth2 client
@@ -90,6 +114,12 @@ paths:
           description: Ok
           schema:
             $ref: "#/definitions/ClientUpdateResponseBody"
+      security:
+        - oauthTwoAccess:
+          - session
+          - read
+          - write
+        - cookieAuth: []
     delete:
       description: |
         Deletes an OAuth2 client by id
@@ -98,6 +128,12 @@ paths:
       responses:
         '204':
           description: No content
+      security:
+        - oauthTwoAccess:
+          - session
+          - read
+          - write
+        - cookieAuth: []
   /apps:
     get:
       description: |
@@ -109,6 +145,11 @@ paths:
           description: Ok
           schema:
             $ref: "#/definitions/AppIndexResponseBody"
+      security:
+        - oauthTwoAccess:
+          - session
+          - read
+        - cookieAuth: []
   /apps/authorize:
     post:
       description: |
@@ -127,6 +168,12 @@ paths:
           description: Created
           schema:
             $ref: "#/definitions/AppCreateResponseBody"
+      security:
+        - oauthTwoAccess:
+          - session
+          - read
+          - write
+        - cookieAuth: []
   /apps/{app_id}:
     parameters:
       - $ref: '#/parameters/app_id'
@@ -140,6 +187,11 @@ paths:
           description: Ok
           schema:
             $ref: "#/definitions/AppShowResponseBody"
+      security:
+        - oauthTwoAccess:
+          - session
+          - read
+        - cookieAuth: []
     delete:
       description: |
         Deletes an OAuth2 app by id
@@ -148,6 +200,12 @@ paths:
       responses:
         '204':
           description: No content
+      security:
+        - oauthTwoAccess:
+          - session
+          - read
+          - write
+        - cookieAuth: []
   /tokens:
     post:
       summary: Creates an OAuth2 access token.
@@ -237,6 +295,11 @@ paths:
       responses:
         '204':
           description: No content
+      security:
+        - oauthTwoAccess:
+          - read
+          - write
+        - cookieAuth: []
   /users/me:
     get:
       summary: Basic info
@@ -250,6 +313,10 @@ paths:
           description: Ok
           schema:
             $ref: "#/definitions/UserMeResponseBody"
+      security:
+        - oauthTwoAccess:
+          - read
+        - cookieAuth: []
   /users/confirm:
     get:
       summary: Email confirmation
@@ -329,6 +396,12 @@ paths:
           description: Ok
           schema:
             $ref: "#/definitions/UserChangePasswordResponseBody"
+      security:
+        - oauthTwoAccess:
+          - session
+          - read
+          - write
+        - cookieAuth: []
 parameters:
   client_id:
     name: client_id
@@ -551,22 +624,19 @@ definitions:
     properties:
       messages:
         type: string
-
 securityDefinitions:
-  cookieAuth:
-    type: apiKey
-    in: header
-    name: cookie
-  accessToken:
-    type: apiKey
-    in: query
-    name: access_token
   oauthTwoAccess:
+    description: Scopes are changable by config file
     type: oauth2
+    scopes:
+      read: Read
+      write: Wrie
+      session: Session access rights
+    flow: accessCode
     authorizationUrl: "https://shield-ui.herokuapp.com/#/oauth2/authorize?client_id=&scope=&redirect_uri="
     tokenUrl: "https://shield-ui.herokuapp.com/tokens"
-    flow: accessCode
-    scopes:
-      - read: Read
-      - write: Wrie
-      - session: Only with session access rights
+  cookieAuth:
+    type: apiKey
+    description: "Assigned cookie"
+    name: cookie
+    in: header
