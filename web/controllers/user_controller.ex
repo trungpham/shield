@@ -16,7 +16,9 @@ defmodule Shield.UserController do
   plug :scrub_params, "user" when action in [:register, :login]
   plug :before_user_register when action in [:register]
   plug :before_user_login when action in [:login]
-  plug Authable.Plug.Authenticate, [scopes: ~w(read write)] when action in [:me, :logout, :change_password]
+  plug Authable.Plug.Authenticate, [scopes: ~w(read)] when action in [:me]
+  plug Authable.Plug.Authenticate, [scopes: ~w(read write)] when action in [:logout]
+  plug Authable.Plug.Authenticate, [scopes: ~w(session read write)] when action in [:change_password]
   plug Authable.Plug.UnauthorizedOnly when action in [:register, :login, :confirm, :recover_password, :reset_password]
   plug Shield.Arm.Confirmable, [enabled: @confirmable] when action in [:me, :change_password]
 
