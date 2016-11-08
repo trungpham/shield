@@ -11,7 +11,8 @@ defmodule Shield.ClientController do
   plug :before_client_create when action in [:create]
   plug :before_client_update when action in [:update]
   plug :before_client_delete when action in [:delete]
-  plug Authable.Plug.Authenticate, [scopes: ~w(session)] when action in [:index, :create, :update, :delete]
+  plug Authable.Plug.Authenticate, [scopes: ~w(session read)] when action in [:index]
+  plug Authable.Plug.Authenticate, [scopes: ~w(session read write)] when action in [:create, :update, :delete]
   plug Shield.Arm.Confirmable, [enabled: Application.get_env(:shield, :confirmable)]
 
   # GET /clients
