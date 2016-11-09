@@ -185,7 +185,7 @@ The package can be installed as:
 
 ### API Endpoints Documentation
 
-You can use paste the content of swagger.yml to [http://editor.swagger.io/](http://editor.swagger.io/) [https://raw.githubusercontent.com/mustafaturan/shield/master/swagger.yml](../raw/master/swagger.yml).
+You can use paste the content of swagger.yml to [http://editor.swagger.io/](http://editor.swagger.io/) [https://raw.githubusercontent.com/mustafaturan/shield/master/swagger.yml](https://raw.githubusercontent.com/mustafaturan/shield/master/swagger.yml).
 
 ### Heroku
 
@@ -372,7 +372,7 @@ Shield and Authable are extensible modules, you can create your strategy and sha
 
   - [x] EmberJS client implementation as a seperate sample app: https://github.com/mustafaturan/shield/tree/ui
 
-  - [ ] Swagger documentation
+  - [x] [Swagger documentation](../master/swagger.yml)
 
   - [ ] Background job to delete expired tokens
 
