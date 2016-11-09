@@ -16,7 +16,9 @@ defmodule Shield.UserController do
   plug :scrub_params, "user" when action in [:register, :login]
   plug :before_user_register when action in [:register]
   plug :before_user_login when action in [:login]
-  plug Authable.Plug.Authenticate, [scopes: ~w(read write)] when action in [:me, :logout, :change_password]
+  plug Authable.Plug.Authenticate, [scopes: ~w(read)] when action in [:me]
+  plug Authable.Plug.Authenticate, [scopes: ~w(read write)] when action in [:logout]
+  plug Authable.Plug.Authenticate, [scopes: ~w(session read write)] when action in [:change_password]
   plug Authable.Plug.UnauthorizedOnly when action in [:register, :login, :confirm, :recover_password, :reset_password]
   plug Shield.Arm.Confirmable, [enabled: @confirmable] when action in [:me, :change_password]
 
@@ -44,12 +46,12 @@ defmodule Shield.UserController do
   end
 
   # POST /users/recover-password
-  def recover_password(conn, %{"email" => email}) do
+  def recover_password(conn, %{"user" => %{"email" => email}}) do
     recover_user_password(conn, @repo.get_by(@user, email: email))
   end
 
   # POST /users/reset-password
-  def reset_password(conn, %{"password" => new_password, "reset_token" => reset_token}) do
+  def reset_password(conn, %{"user" => %{"password" => new_password, "reset_token" => reset_token}}) do
     query = from t in @token_store,
           where: t.value == ^reset_token and
           t.name == "reset_token" and
@@ -61,7 +63,7 @@ defmodule Shield.UserController do
   end
 
   # POST /users/change-password
-  def change_password(conn, %{"password" => new_password, "old_password" => old_password}) do
+  def change_password(conn, %{"user" => %{"password" => new_password, "old_password" => old_password}}) do
     change_password(conn,
       match_with_user_password(old_password, conn.assigns[:current_user]),
       conn.assigns[:current_user], new_password)

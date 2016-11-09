@@ -37,6 +37,8 @@ defmodule Shield.TokenController do
   end
 
   # POST /tokens
+  def create(conn, %{"token" => params}),
+    do: create(conn, params)
   def create(conn, params) do
     case OAuth2.authorize(params) do
       {:error, errors, http_status_code} ->

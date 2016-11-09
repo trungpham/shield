@@ -11,7 +11,8 @@ defmodule Shield.ClientController do
   plug :before_client_create when action in [:create]
   plug :before_client_update when action in [:update]
   plug :before_client_delete when action in [:delete]
-  plug Authable.Plug.Authenticate, [scopes: ~w(session)] when action in [:index, :create, :update, :delete]
+  plug Authable.Plug.Authenticate, [scopes: ~w(session read)] when action in [:index]
+  plug Authable.Plug.Authenticate, [scopes: ~w(session read write)] when action in [:create, :update, :delete]
   plug Shield.Arm.Confirmable, [enabled: Application.get_env(:shield, :confirmable)]
 
   # GET /clients
@@ -65,6 +66,8 @@ defmodule Shield.ClientController do
   def update(conn, %{"id" => id, "client" => client_params}) do
     client = @repo.get_by!(@client, id: id,
                            user_id: conn.assigns[:current_user].id)
+    client_params = Map.put(client_params, "user_id",
+                            conn.assigns[:current_user].id)
     changeset = @client.changeset(client, client_params)
 
     case @repo.update(changeset) do

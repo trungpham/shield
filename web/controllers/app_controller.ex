@@ -12,7 +12,8 @@ defmodule Shield.AppController do
 
   plug :before_app_authorize when action in [:authorize]
   plug :before_app_delete when action in [:delete]
-  plug Authable.Plug.Authenticate, [scopes: ~w(session)]
+  plug Authable.Plug.Authenticate, [scopes: ~w(session read)] when action in [:index, :show]
+  plug Authable.Plug.Authenticate, [scopes: ~w(session read write)] when action in [:authorize, :delete]
   plug Shield.Arm.Confirmable, [enabled: Application.get_env(:shield, :confirmable)]
 
   # GET /apps

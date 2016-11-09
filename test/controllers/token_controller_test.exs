@@ -55,32 +55,33 @@ defmodule Shield.TokenControllerTest do
 
   test "authorize with grant_type authorization_code", %{conn: conn, client: client, authorization_code_token: token} do
     insert(:app, user_id: token.user_id, client_id: client.id)
-    params = %{"grant_type" => "authorization_code", "client_id" => client.id,
-               "client_secret" => client.secret, "code" => token.value,
-               "redirect_uri" => client.redirect_uri}
+    params = %{"token" => %{"grant_type" => "authorization_code",
+               "client_id" => client.id, "client_secret" => client.secret,
+               "code" => token.value, "redirect_uri" => client.redirect_uri}}
     conn = post conn, token_path(conn, :create), params
     assert response(conn, 201)
   end
 
   test "authorize with grant_type password", %{conn: conn, user: user, client: client} do
-    params = %{"grant_type" => "password", "client_id" => client.id,
-               "email" => user.email, "password" => "12345678",
-               "scope" => "read"}
+    params = %{"token" => %{"grant_type" => "password",
+               "client_id" => client.id, "email" => user.email,
+               "password" => "12345678", "scope" => "read"}}
     conn = post conn, token_path(conn, :create), params
     assert response(conn, 201)
   end
 
   test "authorize with grant_type client_credentials", %{conn: conn, client: client}  do
-    params = %{"grant_type" => "client_credentials", "client_id" => client.id,
-               "client_secret" => client.secret}
+    params = %{"token" => %{"grant_type" => "client_credentials",
+               "client_id" => client.id, "client_secret" => client.secret}}
     conn = post conn, token_path(conn, :create), params
     assert response(conn, 201)
   end
 
   test "authorize with grant_type refresh_token", %{conn: conn, client: client, refresh_token: token} do
     insert(:app, user_id: token.user_id, client_id: client.id)
-    params = %{"grant_type" => "refresh_token", "client_id" => client.id,
-               "client_secret" => client.secret, "refresh_token" => token.value}
+    params = %{"token" => %{"grant_type" => "refresh_token",
+               "client_id" => client.id, "client_secret" => client.secret,
+               "refresh_token" => token.value}}
     conn = post conn, token_path(conn, :create), params
     assert response(conn, 201)
   end
