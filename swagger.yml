@@ -3,7 +3,7 @@ info:
   title: SHIELD API
   description: Shield Microservice API Endpoints and Samples
   version: "0.3.3"
-host: shield-api.herokuapp.com
+host: shield-ui.herokuapp.com
 schemes:
   - https
 basePath: /
@@ -33,6 +33,8 @@ paths:
           description: Ok
           schema:
             $ref: "#/definitions/ClientIndexResponseBody"
+        '403':
+          description: Forbidden
       security:
         - oauthTwoAccess:
           - session
@@ -55,6 +57,10 @@ paths:
           description: Created
           schema:
             $ref: "#/definitions/ClientCreateResponseBody"
+        '403':
+          description: Forbidden
+        '422':
+          description: Unprocessable entity
       security:
         - oauthTwoAccess:
           - session
@@ -74,6 +80,10 @@ paths:
           description: Ok
           schema:
             $ref: "#/definitions/ClientShowResponseBody"
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
     put:
       description: |
         Updates an OAuth2 client
@@ -91,6 +101,10 @@ paths:
           description: Ok
           schema:
             $ref: "#/definitions/ClientUpdateResponseBody"
+        '403':
+          description: Forbidden
+        '422':
+          description: Unprocessable entity
       security:
         - oauthTwoAccess:
           - session
@@ -114,6 +128,10 @@ paths:
           description: Ok
           schema:
             $ref: "#/definitions/ClientUpdateResponseBody"
+        '403':
+          description: Forbidden
+        '422':
+          description: Unprocessable entity
       security:
         - oauthTwoAccess:
           - session
@@ -145,6 +163,8 @@ paths:
           description: Ok
           schema:
             $ref: "#/definitions/AppIndexResponseBody"
+        '403':
+          description: Forbidden
       security:
         - oauthTwoAccess:
           - session
@@ -168,6 +188,10 @@ paths:
           description: Created
           schema:
             $ref: "#/definitions/AppCreateResponseBody"
+        '403':
+          description: Forbidden
+        '422':
+          description: Unprocessable entity
       security:
         - oauthTwoAccess:
           - session
@@ -187,6 +211,10 @@ paths:
           description: Ok
           schema:
             $ref: "#/definitions/AppShowResponseBody"
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
       security:
         - oauthTwoAccess:
           - session
@@ -200,6 +228,10 @@ paths:
       responses:
         '204':
           description: No content
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
       security:
         - oauthTwoAccess:
           - session
@@ -244,6 +276,10 @@ paths:
           description: Ok
           schema:
             $ref: "#/definitions/TokenShowResponseBody"
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
   /users/register:
     post:
       summary: User registration endpoint.
@@ -264,6 +300,8 @@ paths:
           description: Created
           schema:
             $ref: "#/definitions/UserRegisterResponseBody"
+        '422':
+          description: Unprocessable entity
   /users/login:
     post:
       summary: User login endpoint.
@@ -284,6 +322,8 @@ paths:
           description: Ok
           schema:
             $ref: "#/definitions/UserLoginResponseBody"
+        '422':
+          description: Unprocessable entity
   /users/logout:
     delete:
       summary: Logout
@@ -295,6 +335,8 @@ paths:
       responses:
         '204':
           description: No content
+        '403':
+          description: Forbidden
       security:
         - oauthTwoAccess:
           - read
@@ -313,6 +355,8 @@ paths:
           description: Ok
           schema:
             $ref: "#/definitions/UserMeResponseBody"
+        '403':
+          description: Forbidden
       security:
         - oauthTwoAccess:
           - read
@@ -336,6 +380,10 @@ paths:
           description: Ok
           schema:
             $ref: "#/definitions/UserConfirmResponseBody"
+        '403':
+          description: Forbidden
+        '404':
+          description: Unprocessable entity
   /users/recover_password:
     post:
       summary: Sends password recovery link
@@ -356,6 +404,10 @@ paths:
           description: Ok
           schema:
             $ref: "#/definitions/UserRecoverPasswordResponseBody"
+        '404':
+          description: Not found
+        '422':
+          description: Unprocessable entity
   /users/reset_password:
     post:
       summary: Changes password
@@ -376,6 +428,10 @@ paths:
           description: Ok
           schema:
             $ref: "#/definitions/UserResetPasswordResponseBody"
+        '403':
+          description: Forbidden
+        '422':
+          description: Unprocessable entity
   /users/change_password:
     post:
       summary: Changes password
@@ -396,6 +452,10 @@ paths:
           description: Ok
           schema:
             $ref: "#/definitions/UserChangePasswordResponseBody"
+        '403':
+          description: Forbidden
+        '422':
+          description: Unprocessable entity
       security:
         - oauthTwoAccess:
           - session
@@ -530,22 +590,44 @@ definitions:
         properties:
           grant_type:
             type: string
+            description: |
+              Valid values are 'authorization_code', 'client_credentials',
+              'password' and 'refresh_token'.
           client_id:
             type: string
+            description: |
+              Required for the grant types 'authorization_code', 'client_credentials',
+              'password' and 'refresh_token'
           client_secret:
             type: string
+            description: |
+              Required for the grant types 'authorization_code', 'client_credentials',
+              'password' and 'refresh_token'
           refresh_token:
             type: string
+            description: |
+              Required for the grant type 'refresh_token'
           email:
             type: string
+            description: |
+              Required for the grant type 'password'
           password:
             type: string
-          secret:
-            type: string
+            description: |
+              Required for the grant type 'password'
           redirect_uri:
             type: string
+            description: |
+              Required for the grant types 'authorization_code' and 'password'
           code:
             type: string
+            description: |
+              Required for the grant type 'authorization_code'
+          scope:
+            type: string
+            description: |
+              Required for the grant types 'authorization_code', 'client_credentials',
+              'password' and 'refresh_token'
   TokenCreateResponseBody:
     properties:
       token:
