@@ -183,6 +183,10 @@ The package can be installed as:
     mix ecto.migrate -r Authable.Repo
     mix phoenix.server
 
+### API Endpoints Documentation
+
+You can use paste the content of swagger.yml to [http://editor.swagger.io/](http://editor.swagger.io/) [https://raw.githubusercontent.com/mustafaturan/shield/master/swagger.yml](../raw/master/swagger.yml).
+
 ### Heroku
 
 [![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy)
