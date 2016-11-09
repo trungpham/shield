@@ -9,29 +9,29 @@ defmodule Shield.Hook do
     quote do
       @behaviour Shield.Hook
 
-      def before_app_authorize(conn, _), do: conn
-      def after_app_authorize_failure(conn, errors, status), do: conn
-      def after_app_authorize_success(conn, token), do: conn
-      def before_app_delete(conn, _), do: conn
+      def before_app_authorize(conn, _params), do: conn
+      def after_app_authorize_failure(conn, _errors, _status), do: conn
+      def after_app_authorize_success(conn, _token), do: conn
+      def before_app_delete(conn, _params), do: conn
       def after_app_delete(conn), do: conn
-      def before_client_create(conn, _), do: conn
-      def after_client_create_success(conn, client), do: conn
-      def after_client_create_failure(conn, changeset), do: conn
-      def before_client_update(conn, _), do: conn
-      def after_client_update_failure(conn, changeset), do: conn
-      def after_client_update_success(conn, client), do: conn
-      def before_client_delete(conn, _), do: conn
+      def before_client_create(conn, _params), do: conn
+      def after_client_create_success(conn, _client), do: conn
+      def after_client_create_failure(conn, _changeset), do: conn
+      def before_client_update(conn, _params), do: conn
+      def after_client_update_failure(conn, _changeset), do: conn
+      def after_client_update_success(conn, _client), do: conn
+      def before_client_delete(conn, _params), do: conn
       def after_client_delete(conn), do: conn
-      def before_token_create(conn, _), do: conn
-      def after_token_create_failure(conn, errors, status), do: conn
-      def after_token_create_success(conn, token), do: conn
-      def before_user_register(conn, _), do: conn
-      def after_user_register_failure(conn, changeset), do: conn
-      def after_user_register_success(conn, user), do: conn
-      def before_user_login(conn, _), do: conn
-      def after_user_login_failure(conn, errors, http_status_code), do: conn
-      def after_user_login_token_failure(conn, changeset), do: conn
-      def after_user_login_token_success(conn, token), do: conn
+      def before_token_create(conn, _params), do: conn
+      def after_token_create_failure(conn, _errors, _status), do: conn
+      def after_token_create_success(conn, _token), do: conn
+      def before_user_register(conn, _params), do: conn
+      def after_user_register_failure(conn, _changeset), do: conn
+      def after_user_register_success(conn, _user), do: conn
+      def before_user_login(conn, _params), do: conn
+      def after_user_login_failure(conn, _errors, _http_status_code), do: conn
+      def after_user_login_token_failure(conn, _changeset), do: conn
+      def after_user_login_token_success(conn, _token), do: conn
 
       defoverridable [
         {:before_app_authorize, 2},
