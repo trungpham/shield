@@ -22,6 +22,7 @@ defmodule Shield.AppController do
              preload: [:client],
              where: a.user_id == ^conn.assigns[:current_user].id)
     apps = @repo.all(query)
+
     render(conn, @views[:app], "index.json", apps: apps)
   end
 
@@ -31,13 +32,15 @@ defmodule Shield.AppController do
              preload: [:client],
              where: a.id == ^id and
                     a.user_id == ^conn.assigns[:current_user].id, limit: 1)
-    app = List.first(@repo.all(query))
-    if is_nil(app) do
-      conn
-      |> put_status(:not_found)
-      |> render(@views[:error], "404.json")
-    else
-      render(conn, @views[:app], "show.json", app: app)
+    apps = @repo.all(query)
+
+    case List.first(apps) do
+      nil ->
+        conn
+        |> put_status(:not_found)
+        |> render(@views[:error], "404.json")
+      app ->
+        render(conn, @views[:app], "show.json", app: app)
     end
   end
 
@@ -45,37 +48,38 @@ defmodule Shield.AppController do
   def authorize(conn, %{"app" => params}) do
     result = OAuth2.authorize_app(conn.assigns[:current_user], params)
     case result do
-    {:error, errors, http_status_code} ->
-      conn
-      |> @hooks.after_app_authorize_failure(errors, http_status_code)
-      |> @renderer.render(http_status_code, %{errors: errors})
-    app ->
-      changeset = @token_store.authorization_code_changeset(%@token_store{}, %{
-        user_id: conn.assigns[:current_user].id,
-        details: %{
-          client_id: params["client_id"],
-          redirect_uri: params["redirect_uri"],
-          scope: app.scope
-        }
-      })
-      case @repo.insert(changeset) do
-      {:ok, token} ->
+      {:error, errors, http_status_code} ->
         conn
-        |> @hooks.after_app_authorize_success(token)
-        |> put_status(:created)
-        |> render(@views[:token], "show.json", token: token)
-      {:error, errors} ->
-        conn
-        |> @hooks.after_app_authorize_failure(errors, :unprocessable_entity)
-        |> put_status(:unprocessable_entity)
-        |> render(@views[:error], "422.json")
-      end
+        |> @hooks.after_app_authorize_failure(errors, http_status_code)
+        |> @renderer.render(http_status_code, %{errors: errors})
+      app ->
+        changeset = @token_store.authorization_code_changeset(%@token_store{}, %{
+          user_id: conn.assigns[:current_user].id,
+          details: %{
+            client_id: params["client_id"],
+            redirect_uri: params["redirect_uri"],
+            scope: app.scope
+          }
+        })
+        case @repo.insert(changeset) do
+          {:ok, token} ->
+            conn
+            |> @hooks.after_app_authorize_success(token)
+            |> put_status(:created)
+            |> render(@views[:token], "show.json", token: token)
+          {:error, errors} ->
+            conn
+            |> @hooks.after_app_authorize_failure(errors, :unprocessable_entity)
+            |> put_status(:unprocessable_entity)
+            |> render(@views[:error], "422.json")
+        end
     end
   end
 
   # DELETE /apps/:id
   def delete(conn, %{"id" => id}) do
     OAuth2.revoke_app_authorization(conn.assigns[:current_user], %{"id" => id})
+
     conn
     |> @hooks.after_app_delete
     |> send_resp(:no_content, "")

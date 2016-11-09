@@ -33,15 +33,15 @@ defmodule Shield.UserController do
   def confirm(conn, %{"confirmation_token" => token_value}) do
     case Shield.Arm.Confirmable.confirm(token_value) do
       {:error, %{confirmation_token: error}} ->
-        conn
-        |> @renderer.render(:forbidden, %{errors: %{confirmation_token: error}})
+        @renderer.render(conn, :forbidden, %{errors:
+          %{confirmation_token: error}})
       {:error, changeset} ->
         conn
         |> put_status(:unprocessable_entity)
         |> render(@views[:changeset], "error.json", changeset: changeset)
       {:ok, _} ->
-        conn
-        |> @renderer.render(:ok, %{messages: "Email confirmed successfully!"})
+        @renderer.render(conn, :ok,
+          %{messages: "Email confirmed successfully!"})
     end
   end
 
@@ -93,7 +93,7 @@ defmodule Shield.UserController do
     try_login(conn, user, password)
   end
   def login(conn, _) do
-    conn |> @renderer.render(:unprocessable_entity, %{errors:
+    @renderer.render(conn, :unprocessable_entity, %{errors:
       %{details: "Invalid email or password format!"}})
   end
 
@@ -113,12 +113,14 @@ defmodule Shield.UserController do
   defp try_login(conn, nil, _) do
     {http_status_code, errors} = {:unauthorized,
       %{email: "Email could not found."}}
+
     conn
     |> @hooks.after_user_login_failure(errors, http_status_code)
     |> @renderer.render(http_status_code, %{errors: errors})
   end
   defp try_login(conn, _, false) do
     {http_status_code, errors} = {:unauthorized, %{password: "Wrong password!"}}
+
     conn
     |> @hooks.after_user_login_failure(errors, http_status_code)
     |> @renderer.render(http_status_code, %{errors: errors})
@@ -130,9 +132,8 @@ defmodule Shield.UserController do
   defp try_login(conn, user, password), do:
     try_login(conn, user, match_with_user_password(password, user))
   defp try_login(conn, user, true, false) do
-    conn
-    |> @renderer.render(:unauthorized, %{errors: %{email:
-         "Email confirmation required to login."}})
+    @renderer.render(conn, :unauthorized, %{errors:
+      %{email: "Email confirmation required to login."}})
   end
   defp try_login(conn, user, true, true) do
     changeset = @token_store.session_token_changeset(%@token_store{},
@@ -166,6 +167,7 @@ defmodule Shield.UserController do
       name: "reset_token",
       expires_at: :os.system_time(:seconds) + 3600
     })
+
     case @repo.insert(changeset) do
       {:ok, token} ->
         recover_password_url = String.replace((Map.get(@front_end, :base) <>
@@ -177,8 +179,8 @@ defmodule Shield.UserController do
           %{identity: user.email,
             recover_password_url: recover_password_url}
         )
-        conn
-        |> @renderer.render(:created, %{messages: "Email sent!"})
+
+        @renderer.render(conn, :created, %{messages: "Email sent!"})
       {:error, _} ->
         conn
         |> put_status(:unprocessable_entity)
@@ -187,8 +189,8 @@ defmodule Shield.UserController do
   end
 
   defp reset_password(conn, nil, _) do
-    conn |> @renderer.render(:forbidden, %{errors: %{reset_token:
-      "Invalid token."}})
+    @renderer.render(conn, :forbidden, %{errors:
+      %{reset_token: "Invalid token."}})
   end
   defp reset_password(conn, token, password) do
     @repo.delete!(token)
@@ -196,15 +198,14 @@ defmodule Shield.UserController do
   end
 
   defp change_password(conn, false, _, _) do
-    conn |> @renderer.render(:forbidden, %{errors: %{old_password:
-      "Wrong old password."}})
+    @renderer.render(conn, :forbidden, %{errors:
+      %{old_password: "Wrong old password."}})
   end
   defp change_password(conn, true, user, password) do
     changeset = @user.password_changeset(user, %{password: password})
     case @repo.update(changeset) do
       {:ok, _} ->
-        conn
-        |> @renderer.render(:ok, %{messages: "Password updated!"})
+        @renderer.render(conn, :ok, %{messages: "Password updated!"})
       {:error, changeset} ->
         conn
         |> put_status(:unprocessable_entity)
