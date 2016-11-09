@@ -20,6 +20,7 @@ defmodule Shield.ClientController do
     query = (from c in @client,
              where: c.user_id == ^conn.assigns[:current_user].id)
     clients = @repo.all(query)
+
     render(conn, @views[:client], "index.json", clients: clients)
   end
 
@@ -47,18 +48,19 @@ defmodule Shield.ClientController do
 
   # GET /clients/:id
   def show(conn, %{"id" => id}) do
-    conn = conn |> assign_current_user
+    conn = assign_current_user(conn)
+
     case @repo.get(@client, id) do
-      nil    ->
+      nil ->
         conn
         |> put_status(:not_found)
         |> render(@views[:error], "404.json")
       client ->
         is_owner = conn.assigns[:current_user] &&
           conn.assigns[:current_user].id == client.user_id
-        conn
-        |> render(@views[:client], "show.json", client: client,
-             is_owner: is_owner)
+
+        render(conn, @views[:client], "show.json", client: client,
+          is_owner: is_owner)
     end
   end
 
@@ -98,11 +100,10 @@ defmodule Shield.ClientController do
 
   defp assign_current_user(conn) do
     user = case Authable.Helper.authorize_for_resource(conn, ~w(session)) do
-      {:ok, user} ->
-        user
-      _ ->
-        nil
+      {:ok, user} -> user
+      _ -> nil
     end
+
     assign(conn, :current_user, user)
   end
 end
