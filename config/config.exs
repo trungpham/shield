@@ -23,9 +23,9 @@ config :shield,
     token: Shield.TokenView,
     user: Shield.UserView
   },
-  cors_origins: "http://localhost:4200, *",
+  cors_origins: "http://localhost:8080, *",
   front_end: %{
-    base: "http://localhost:4200",
+    base: "http://localhost:8080",
     confirmation_path: "/users/confirm?confirmation_token={{confirmation_token}}",
     reset_password_path: "/users/reset-password?reset_token={{reset_token}}"
   }
