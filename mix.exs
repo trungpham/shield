@@ -4,7 +4,7 @@ defmodule Shield.Mixfile do
   def project do
     [app: :shield,
      version: "0.3.3",
-     elixir: "~> 1.2",
+     elixir: "~> 1.3",
      elixirc_paths: elixirc_paths(Mix.env),
      compilers: [:phoenix, :gettext] ++ Mix.compilers,
      build_embedded: Mix.env == :prod,
@@ -35,15 +35,16 @@ defmodule Shield.Mixfile do
   # Type `mix help deps` for examples and options.
   defp deps do
     [{:phoenix, "~> 1.2.0"},
-     {:phoenix_ecto, "~> 3.0"},
-     {:gettext, "~> 0.11"},
-     {:cowboy, "~> 1.0"},
-     {:authable, "~> 0.6.6"},
+     {:phoenix_ecto, "~> 3.2.1"},
+     {:gettext, "~> 0.13"},
+     {:cowboy, "~> 1.0.4"},
+     {:authable, "~> 0.7.0"},
      {:shield_notifier, "~> 0.1.0"},
-     {:cors_plug, "~> 1.1"},
+     {:cors_plug, "~> 1.1.4"},
+     {:poison, "~> 3.1", override: true},
      {:ex_machina, "~> 1.0.1", only: :test},
-     {:credo, "~> 0.4.5", only: [:dev, :test]},
-     {:ex_doc, ">= 0.0.0", only: :dev}
+     {:credo, "~> 0.5.3", only: [:dev, :test]},
+     {:ex_doc, ">= 0.14.5", only: :dev}
    ]
   end
 
