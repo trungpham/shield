@@ -177,7 +177,7 @@ The package can be installed as:
 ### Standalone
 
     git clone git@github.com:mustafaturan/shield.git
-    cd shields
+    cd shield
     mix deps.get
     mix ecto.create -r Authable.Repo
     mix ecto.migrate -r Authable.Repo
@@ -368,15 +368,17 @@ Shield and Authable are extensible modules, you can create your strategy and sha
 
 ## Todo
 
-  - [ ] New protection arms like recaptcha and one time password protections
-
-  - [x] EmberJS client implementation as a seperate sample app: https://github.com/mustafaturan/shield/tree/ui
-
   - [x] [Swagger documentation](../master/swagger.yml)
+
+  - [x] Sample UI Client: https://github.com/mustafaturan/shield/tree/ui
+
+  - [x] Sample resource server implementation https://github.com/mustafaturan/shield-blog-sample
 
   - [ ] Background job to delete expired tokens
 
-  - [ ] Sample resource server implementation
+  - [ ] Optional one time password protection
+
+  - [ ] Optional captcha protection
 
 ## References
 
