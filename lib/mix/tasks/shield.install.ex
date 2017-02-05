@@ -1,8 +1,6 @@
 defmodule Mix.Tasks.Shield.Install do
   use Mix.Task
-  import Mix.Generator
 
-  @shield Path.expand("../..", __DIR__)
   @version Mix.Project.config[:version]
   @shortdoc "Creates default views and controllers inside current application."
 
@@ -49,7 +47,7 @@ defmodule Mix.Tasks.Shield.Install do
     Mix.shell.info "Shield v#{@version}"
   end
 
-  def run(argv) do
+  def run(_argv) do
     unless Version.match? System.version, "~> 1.2" do
       Mix.raise "Shield v#{@version} requires at least Elixir v1.2.\n " <>
                 "You have #{System.version}. Please update accordingly"
@@ -58,15 +56,14 @@ defmodule Mix.Tasks.Shield.Install do
     multi_cp()
   end
 
-  defp multi_cp() do
+  defp multi_cp do
+    Mix.Phoenix.copy_from shield_paths(), "./deps/shield/", "", [], @controllers
+    Mix.Phoenix.copy_from shield_paths(), "./deps/shield/", "", [], @views
+    Mix.Phoenix.copy_from authable_paths(), "./deps/authable/", "", [], @models
+    Mix.Phoenix.copy_from authable_paths(), "./deps/authable/", "", [], @migrations
 
-    Mix.Phoenix.copy_from shield_paths, "./deps/shield/", "", [], @controllers
-    Mix.Phoenix.copy_from shield_paths, "./deps/shield/", "", [], @views
-    Mix.Phoenix.copy_from authable_paths, "./deps/authable/", "", [], @models
-    Mix.Phoenix.copy_from authable_paths, "./deps/authable/", "", [], @migrations
-
-    print_controllers_info
-    print_ecto_info
+    print_controllers_info()
+    print_ecto_info()
   end
 
   defp shield_paths do

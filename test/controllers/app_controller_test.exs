@@ -5,9 +5,6 @@ defmodule Shield.AppControllerTest do
   @repo Application.get_env(:authable, :repo)
   @app Application.get_env(:authable, :app)
 
-  @valid_attrs %{scope: "some content"}
-  @invalid_attrs %{}
-
   setup %{conn: conn} do
     user1 = insert(:user)
     user2 = insert(:user)

@@ -6,7 +6,6 @@ defmodule Shield.AppController do
   @repo Application.get_env(:authable, :repo)
   @app Application.get_env(:authable, :app)
   @token_store Application.get_env(:authable, :token_store)
-  @client Application.get_env(:authable, :client)
   @views Application.get_env(:shield, :views)
   @renderer Application.get_env(:authable, :renderer)
 

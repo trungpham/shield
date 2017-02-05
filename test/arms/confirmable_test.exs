@@ -17,14 +17,14 @@ defmodule Shield.Arm.ConfirmableTest do
   end
 
   test "defend with unconfirmed user", %{conn: conn} do
-    user = insert(:user, settings: %{confirmed: false})
+    user = insert(:user, settings: %{"confirmed" => false})
     conn = conn |> assign(:current_user, user) |> ConfirmablePlug.call(@opts)
     assert conn.state == :set
     assert conn.status == 403
   end
 
   test "defend with unconfirmed user, when defend not enabled!", %{conn: conn} do
-    user = insert(:user, settings: %{confirmed: false})
+    user = insert(:user, settings: %{"confirmed" => false})
     conn = conn |> assign(:current_user, user) |> ConfirmablePlug.call(false)
     assert conn.state == :unset
     assert conn.status != 403

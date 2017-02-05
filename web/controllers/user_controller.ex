@@ -10,7 +10,6 @@ defmodule Shield.UserController do
   @renderer Application.get_env(:authable, :renderer)
   @views Application.get_env(:shield, :views)
   @front_end Application.get_env(:shield, :front_end)
-  @front_end_base Map.get(@front_end, :base)
   @confirmable Application.get_env(:shield, :confirmable)
 
   plug :scrub_params, "user" when action in [:register, :login]
@@ -74,7 +73,7 @@ defmodule Shield.UserController do
     changeset = @user.registration_changeset(%@user{}, user_params)
     case @repo.insert(changeset) do
       {:ok, user} ->
-        Shield.Arm.Confirmable.registration_hook(user)
+        if @confirmable, do: Shield.Arm.Confirmable.registration_hook(user)
         conn
         |> @hooks.after_user_register_success(user)
         |> put_status(:created)
@@ -126,12 +125,17 @@ defmodule Shield.UserController do
     |> @renderer.render(http_status_code, %{errors: errors})
   end
   defp try_login(conn, user, true) do
-    try_login(conn, user, true,
-      @confirmable && Map.get(user.settings || %{}, "confirmed", false))
+    confirmation_required =
+      if @confirmable do
+        Map.get(user.settings || %{}, "confirmed", false)
+      else
+        true
+      end
+    try_login(conn, user, true, confirmation_required)
   end
   defp try_login(conn, user, password), do:
     try_login(conn, user, match_with_user_password(password, user))
-  defp try_login(conn, user, true, false) do
+  defp try_login(conn, _user, true, false) do
     @renderer.render(conn, :unauthorized, %{errors:
       %{email: "Email confirmation required to login."}})
   end

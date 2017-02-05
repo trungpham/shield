@@ -3,7 +3,6 @@ defmodule Shield.Hook do
   This module helps to sync and async hooks into the lifecycle of
   public actions.
   """
-  use Behaviour
 
   defmacro __using__(_) do
     quote do

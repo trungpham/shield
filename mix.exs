@@ -9,10 +9,10 @@ defmodule Shield.Mixfile do
      compilers: [:phoenix, :gettext] ++ Mix.compilers,
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
-     description: description,
-     package: package,
-     aliases: aliases,
-     deps: deps,
+     description: description(),
+     package: package(),
+     aliases: aliases(),
+     deps: deps(),
      docs: [extras: ["README.md"]]]
 
   end
@@ -39,11 +39,11 @@ defmodule Shield.Mixfile do
      {:gettext, "~> 0.13"},
      {:cowboy, "~> 1.0.4"},
      {:authable, "~> 0.7.0"},
-     {:shield_notifier, "~> 0.1.0"},
+     {:shield_notifier, "~> 0.2.0"},
      {:cors_plug, "~> 1.1.4"},
      {:poison, "~> 2.0 or ~> 3.0 or ~> 3.1"},
      {:ex_machina, "~> 1.0.1", only: :test},
-     {:credo, "~> 0.5.3", only: [:dev, :test]},
+     {:credo, "~> 0.6.1", only: :dev},
      {:ex_doc, ">= 0.14.5", only: :dev}
    ]
   end

@@ -4,7 +4,6 @@ defmodule Shield.TokenController do
   alias Authable.OAuth2, as: OAuth2
 
   @repo Application.get_env(:authable, :repo)
-  @user Application.get_env(:authable, :resource_owner)
   @client Application.get_env(:authable, :client)
   @token_store Application.get_env(:authable, :token_store)
   @renderer Application.get_env(:authable, :renderer)
