@@ -98,6 +98,14 @@ defmodule Mix.Tasks.Shield.Install do
           post    "/users/login", UserController, :login
           delete  "/users/logout", UserController, :logout
           get     "/users/me", UserController, :me
+          get     "/users/confirm", UserController, :confirm
+          post    "/users/recover_password", UserController, :recover_password
+          post    "/users/reset_password", UserController, :reset_password
+          post    "/users/change_password", UserController, :change_password
+
+          get     "/settings", SettingController, :index
+          put     "/settings/:id", SettingController, :update
+          patch   "/settings/:id", SettingController, :update
         end
     """
     nil

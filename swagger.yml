@@ -2,7 +2,7 @@ swagger: '2.0'
 info:
   title: SHIELD API
   description: Shield Microservice API Endpoints and Samples
-  version: "0.3.3"
+  version: "0.5"
 host: shield-ui.herokuapp.com
 schemes:
   - https
@@ -462,6 +462,46 @@ paths:
           - read
           - write
         - cookieAuth: []
+  /settings:
+    get:
+      description: |
+        List of user settings
+      tags:
+        - OTP
+        - Confirmable
+      responses:
+        '200':
+          description: Ok
+        '403':
+          description: Forbidden
+  /settings/one_time_password:
+    put:
+      description: |
+        Updates one time password settings
+      tags:
+        - OTP
+      parameters:
+        - in: body
+          name: json
+          description: Partial setting object
+          required: false
+          schema:
+            $ref: "#/definitions/SettingOTPUpdateRequestBody"
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: "#/definitions/SettingOTPUpdateResponseBody"
+        '403':
+          description: Forbidden
+        '422':
+          description: Unprocessable entity
+      security:
+        - oauthTwoAccess:
+          - session
+          - read
+          - write
+        - cookieAuth: []
 parameters:
   client_id:
     name: client_id
@@ -706,6 +746,31 @@ definitions:
     properties:
       messages:
         type: string
+  SettingOTPUpdateRequestBody:
+    properties:
+      setting:
+        properties:
+          one_time_password:
+            properties:
+              action:
+                type: string
+                description: |
+                  enable or disable.
+              opt_secret:
+                type: string
+                description: |
+                  Secret for OTP (required only when action is enabled)
+              otp_value:
+                type: string
+                description: |
+                  Value for the secret OTP, 6 digit number
+  SettingOTPUpdateResponseBody:
+    properties:
+      messages:
+        properties:
+          details:
+            type: string
+            description: Message
 securityDefinitions:
   oauthTwoAccess:
     description: Scopes are changable by config file

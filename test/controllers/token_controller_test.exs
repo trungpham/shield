@@ -42,14 +42,14 @@ defmodule Shield.TokenControllerTest do
   end
 
   test "does not show resource and instead throw error when id is nonexistent", %{conn: conn, client: client} do
-    conn = get conn, token_path(conn, :show, "invalid token"),
-      client_id: client.id, client_secret: client.secret
+    conn = get(conn, token_path(conn, :show, "invalid token"),
+      client_id: client.id, client_secret: client.secret)
     assert response(conn, 404)
   end
 
   test "does not show resource and instead throw error when id not belongs to current user", %{conn: conn, client: client, another_client_token: token} do
-    conn = get conn, token_path(conn, :show, token.value),
-      client_id: client.id, client_secret: client.secret
+    conn = get(conn, token_path(conn, :show, token.value),
+      client_id: client.id, client_secret: client.secret)
     assert response(conn, 404)
   end
 
@@ -58,7 +58,7 @@ defmodule Shield.TokenControllerTest do
     params = %{"token" => %{"grant_type" => "authorization_code",
                "client_id" => client.id, "client_secret" => client.secret,
                "code" => token.value, "redirect_uri" => client.redirect_uri}}
-    conn = post conn, token_path(conn, :create), params
+    conn = post(conn, token_path(conn, :create), params)
     assert response(conn, 201)
   end
 
@@ -66,14 +66,14 @@ defmodule Shield.TokenControllerTest do
     params = %{"token" => %{"grant_type" => "password",
                "client_id" => client.id, "email" => user.email,
                "password" => "12345678", "scope" => "read"}}
-    conn = post conn, token_path(conn, :create), params
+    conn = post(conn, token_path(conn, :create), params)
     assert response(conn, 201)
   end
 
   test "authorize with grant_type client_credentials", %{conn: conn, client: client}  do
     params = %{"token" => %{"grant_type" => "client_credentials",
                "client_id" => client.id, "client_secret" => client.secret}}
-    conn = post conn, token_path(conn, :create), params
+    conn = post(conn, token_path(conn, :create), params)
     assert response(conn, 201)
   end
 
@@ -82,7 +82,7 @@ defmodule Shield.TokenControllerTest do
     params = %{"token" => %{"grant_type" => "refresh_token",
                "client_id" => client.id, "client_secret" => client.secret,
                "refresh_token" => token.value}}
-    conn = post conn, token_path(conn, :create), params
+    conn = post(conn, token_path(conn, :create), params)
     assert response(conn, 201)
   end
 end

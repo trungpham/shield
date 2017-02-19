@@ -13,7 +13,8 @@ config :shield, Shield.Endpoint,
   render_errors: [accepts: ~w(json), format: "json"]
 
 config :shield,
-  confirmable: true,
+  confirmable: false,
+  one_time_password_enabled: false,
   hooks: Shield.Hook.Default,
   views: %{
     changeset: Shield.ChangesetView,
@@ -23,9 +24,9 @@ config :shield,
     token: Shield.TokenView,
     user: Shield.UserView
   },
-  cors_origins: "http://localhost:4200, *",
+  cors_origins: "http://localhost:8080, *",
   front_end: %{
-    base: "http://localhost:4200",
+    base: "http://localhost:8080",
     confirmation_path: "/users/confirm?confirmation_token={{confirmation_token}}",
     reset_password_path: "/users/reset-password?reset_token={{reset_token}}"
   }

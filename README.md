@@ -97,6 +97,7 @@ The package can be installed as:
     ```elixir
     config :shield,
       confirmable: true,
+      otp_check: false,
       hooks: Shield.Hook.Default,
       views: %{
         changeset: Shield.ChangesetView,
@@ -170,6 +171,10 @@ The package can be installed as:
       post    "/users/recover_password", UserController, :recover_password
       post    "/users/reset_password", UserController, :reset_password
       post    "/users/change_password", UserController, :change_password
+
+      get     "/settings", SettingController, :index
+      put     "/settings/:id", SettingController, :update
+      patch   "/settings/:id", SettingController, :update
     end
     ```
 
@@ -375,9 +380,9 @@ Shield and Authable are extensible modules, you can create your strategy and sha
 
   - [x] Sample resource server implementation https://github.com/mustafaturan/shield-blog-sample
 
-  - [ ] Background job to delete expired tokens
+  - [x] Optional one time password protection
 
-  - [ ] Optional one time password protection
+  - [ ] Background job to delete expired tokens
 
   - [ ] Optional captcha protection
 

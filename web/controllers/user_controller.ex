@@ -1,7 +1,8 @@
 defmodule Shield.UserController do
   use Shield.Web, :controller
   use Shield.HookImporter
-  alias Shield.Notifier.Channel.Email, as: EmailNotifier
+  alias Shield.Policy.Login, as: LoginPolicy
+  alias Shield.Notifier.Channel.Email, as: EmailChannel
   alias Authable.Utils.Crypt, as: CryptUtil
 
   @repo Application.get_env(:authable, :repo)
@@ -10,7 +11,6 @@ defmodule Shield.UserController do
   @renderer Application.get_env(:authable, :renderer)
   @views Application.get_env(:shield, :views)
   @front_end Application.get_env(:shield, :front_end)
-  @confirmable Application.get_env(:shield, :confirmable)
 
   plug :scrub_params, "user" when action in [:register, :login]
   plug :before_user_register when action in [:register]
@@ -19,7 +19,7 @@ defmodule Shield.UserController do
   plug Authable.Plug.Authenticate, [scopes: ~w(read write)] when action in [:logout]
   plug Authable.Plug.Authenticate, [scopes: ~w(session read write)] when action in [:change_password]
   plug Authable.Plug.UnauthorizedOnly when action in [:register, :login, :confirm, :recover_password, :reset_password]
-  plug Shield.Arm.Confirmable, [enabled: @confirmable] when action in [:me, :change_password]
+  plug Shield.Arm.Confirmable, [enabled: Application.get_env(:shield, :confirmable)] when action in [:me, :change_password]
 
   # GET /users/me
   def me(conn, _) do
@@ -63,8 +63,9 @@ defmodule Shield.UserController do
 
   # POST /users/change-password
   def change_password(conn, %{"user" => %{"password" => new_password, "old_password" => old_password}}) do
-    change_password(conn,
-      match_with_user_password(old_password, conn.assigns[:current_user]),
+    is_password_matched = CryptUtil.match_password(old_password,
+      Map.get(conn.assigns[:current_user], :password, ""))
+    change_password(conn, is_password_matched,
       conn.assigns[:current_user], new_password)
   end
 
@@ -73,7 +74,8 @@ defmodule Shield.UserController do
     changeset = @user.registration_changeset(%@user{}, user_params)
     case @repo.insert(changeset) do
       {:ok, user} ->
-        if @confirmable, do: Shield.Arm.Confirmable.registration_hook(user)
+        confirmable = Application.get_env(:shield, :confirmable)
+        if confirmable, do: Shield.Arm.Confirmable.registration_hook(user)
         conn
         |> @hooks.after_user_register_success(user)
         |> put_status(:created)
@@ -87,9 +89,15 @@ defmodule Shield.UserController do
   end
 
   # POST /users/login
-  def login(conn, %{"user" => %{"email" => email, "password" => password}}) when is_binary(password) and is_binary(email) do
-    user = @repo.get_by(@user, email: email)
-    try_login(conn, user, password)
+  def login(conn, %{"user" => %{"email" => email, "password" => password} = params}) when is_binary(password) and is_binary(email) do
+    case LoginPolicy.check(params) do
+      {:error, {http_status_code, errors}} ->
+        conn
+        |> @hooks.after_user_login_failure(errors, http_status_code)
+        |> @renderer.render(http_status_code, %{errors: errors})
+      {:ok, %{"user" => user}} ->
+        insert_session_token(conn, user)
+    end
   end
   def login(conn, _) do
     @renderer.render(conn, :unprocessable_entity, %{errors:
@@ -109,57 +117,6 @@ defmodule Shield.UserController do
     |> send_resp(:no_content, "")
   end
 
-  defp try_login(conn, nil, _) do
-    {http_status_code, errors} = {:unauthorized,
-      %{email: "Email could not found."}}
-
-    conn
-    |> @hooks.after_user_login_failure(errors, http_status_code)
-    |> @renderer.render(http_status_code, %{errors: errors})
-  end
-  defp try_login(conn, _, false) do
-    {http_status_code, errors} = {:unauthorized, %{password: "Wrong password!"}}
-
-    conn
-    |> @hooks.after_user_login_failure(errors, http_status_code)
-    |> @renderer.render(http_status_code, %{errors: errors})
-  end
-  defp try_login(conn, user, true) do
-    confirmation_required =
-      if @confirmable do
-        Map.get(user.settings || %{}, "confirmed", false)
-      else
-        true
-      end
-    try_login(conn, user, true, confirmation_required)
-  end
-  defp try_login(conn, user, password), do:
-    try_login(conn, user, match_with_user_password(password, user))
-  defp try_login(conn, _user, true, false) do
-    @renderer.render(conn, :unauthorized, %{errors:
-      %{email: "Email confirmation required to login."}})
-  end
-  defp try_login(conn, user, true, true) do
-    changeset = @token_store.session_token_changeset(%@token_store{},
-                  %{user_id: user.id, details: %{"scope" => "session"}})
-    case @repo.insert(changeset) do
-      {:ok, token} ->
-        conn
-        |> @hooks.after_user_login_token_success(token)
-        |> assign(:current_user, user)
-        |> fetch_session
-        |> put_session(:session_token, token.value)
-        |> configure_session(renew: true)
-        |> put_status(:created)
-        |> render(@views[:user], "show.json", user: user)
-      {:error, changeset} ->
-        conn
-        |> @hooks.after_user_login_token_failure(changeset)
-        |> put_status(:unprocessable_entity)
-        |> render(@views[:changeset], "error.json", changeset: changeset)
-    end
-  end
-
   defp recover_user_password(conn, nil) do
     conn
     |> put_status(:not_found)
@@ -177,7 +134,7 @@ defmodule Shield.UserController do
         recover_password_url = String.replace((Map.get(@front_end, :base) <>
           Map.get(@front_end, :reset_password_path)), "{{reset_token}}",
           token.value)
-        EmailNotifier.deliver(
+        EmailChannel.deliver(
           [user.email],
           :recover_password,
           %{identity: user.email,
@@ -217,7 +174,24 @@ defmodule Shield.UserController do
     end
   end
 
-  defp match_with_user_password(password, user) do
-    CryptUtil.match_password(password, Map.get(user, :password, ""))
+  defp insert_session_token(conn, user) do
+    changeset = @token_store.session_token_changeset(%@token_store{},
+                  %{user_id: user.id, details: %{"scope" => "session"}})
+    case @repo.insert(changeset) do
+      {:ok, token} ->
+        conn
+        |> @hooks.after_user_login_token_success(token)
+        |> assign(:current_user, user)
+        |> fetch_session
+        |> put_session(:session_token, token.value)
+        |> configure_session(renew: true)
+        |> put_status(:created)
+        |> render(@views[:user], "show.json", user: user)
+      {:error, changeset} ->
+        conn
+        |> @hooks.after_user_login_token_failure(changeset)
+        |> put_status(:unprocessable_entity)
+        |> render(@views[:changeset], "error.json", changeset: changeset)
+    end
   end
 end

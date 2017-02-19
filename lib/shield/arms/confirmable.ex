@@ -5,7 +5,7 @@ defmodule Shield.Arm.Confirmable do
 
   import Ecto.Query
   import Plug.Conn
-  alias Shield.Notifier.Channel.Email, as: EmailNotifier
+  alias Shield.Notifier.Channel.Email, as: EmailChannel
 
   @behaviour Shield.Arm
   @renderer Application.get_env(:authable, :renderer)
@@ -19,6 +19,7 @@ defmodule Shield.Arm.Confirmable do
 
   def call(conn, enabled), do: defend(conn, enabled)
 
+  def defend(conn, nil), do: conn
   def defend(conn, false), do: conn
   def defend(conn, true), do: defend_conn(conn, conn.assigns[:current_user])
 
@@ -52,7 +53,7 @@ defmodule Shield.Arm.Confirmable do
   end
 
   defp update_confirm_status(user, status) do
-    settings = user.settings || %{} |> Map.put(:confirmed, status)
+    settings = user.settings || %{} |> Map.put("confirmed", status)
     changeset = @resource_owner.settings_changeset(user, %{settings: settings})
     @repo.update(changeset)
   end
@@ -68,7 +69,7 @@ defmodule Shield.Arm.Confirmable do
         confirmation_url = String.replace(@front_end_base <>
           Map.get(@front_end, :confirmation_path),
           "{{confirmation_token}}", token.value)
-        EmailNotifier.deliver([user.email], :confirmation,
+        EmailChannel.deliver([user.email], :confirmation,
           %{identity: user.email, confirmation_url: confirmation_url})
         {:ok, token}
       {:error, changeset} -> {:error, changeset}
