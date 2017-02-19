@@ -12,7 +12,7 @@ defmodule Shield.Arm.OneTimePassword do
   @repo Application.get_env(:authable, :repo)
   @resource_owner Application.get_env(:authable, :resource_owner)
   @token_store Application.get_env(:authable, :token_store)
-  @ten_years_in_seconds 315360000
+  @ten_years_in_seconds 315_360_000
   @token_name "otp_secret_token"
 
   def init(opts) do
@@ -22,6 +22,8 @@ defmodule Shield.Arm.OneTimePassword do
     }
   end
 
+  def call(conn, {nil, _}),
+    do: conn
   def call(conn, {false, _}),
     do: conn
   def call(conn, {enabled, params_namespace}),
@@ -42,6 +44,27 @@ defmodule Shield.Arm.OneTimePassword do
     defend_conn(conn, {conn.assigns[:current_user], otp_value})
   end
 
+  def is_valid?(encrypted_otp_secret_token, otp_value) do
+    otp_secret = decrypt_val(encrypted_otp_secret_token)
+    case Comeonin.Otp.check_totp(otp_value, otp_secret) do
+      false -> false
+      result -> is_integer(result) && (
+          result
+          |> Integer.to_string
+          |> String.match?(~r/(^[\d]+$)/)
+        )
+    end
+  end
+
+  def find_otp_secret_token(user) do
+    query = from t in @token_store,
+      where: t.user_id == ^user.id and t.name == ^@token_name, limit: 1
+
+    query
+    |> @repo.all
+    |> List.first
+  end
+
   def generate_otp_secret do
     otp_secret_token = Comeonin.Otp.gen_secret
     encrypted_otp_secret_token = encrypt_val(otp_secret_token)
@@ -53,13 +76,13 @@ defmodule Shield.Arm.OneTimePassword do
 
     case List.first(@repo.all(query)) do
       nil -> otp_secret_token
-      token -> generate_otp_secret
+      _token -> generate_otp_secret()
     end
   end
 
   def disable(user, otp_value) do
     settings = Map.put(user.settings || %{}, "otp_enabled", false)
-    settings_changeset = @resource_owner.settings_changeset(user, settings)
+    settings_changeset = @resource_owner.settings_changeset(user, %{settings: settings})
 
     case find_otp_secret_token(user) do
       nil ->
@@ -80,7 +103,7 @@ defmodule Shield.Arm.OneTimePassword do
   end
 
   def enable(user, otp_secret, otp_value) do
-    case Map.get(user.settings, "otp_enabled", false) do
+    case Map.get(user.settings || %{}, "otp_enabled", false) do
       true ->
         {:error, %{opt_enabled: ["Already enabled"]}}
       false ->
@@ -120,27 +143,6 @@ defmodule Shield.Arm.OneTimePassword do
       |> Multi.update(:user, settings_changeset)
 
     {:ok, _} = @repo.transaction(queries)
-  end
-
-  defp is_valid?(encrypted_otp_secret_token, otp_value) do
-    otp_secret = decrypt_val(encrypted_otp_secret_token)
-    case Comeonin.Otp.check_totp(otp_value, otp_secret) do
-      false -> false
-      result -> is_integer(result) && (
-          result
-          |> Integer.to_string
-          |> String.match?(~r/(^[\d]+$)/)
-        )
-    end
-  end
-
-  defp find_otp_secret_token(user) do
-    query = from t in @token_store,
-      where: t.user_id == ^user.id and t.name == ^@token_name, limit: 1
-
-    query
-    |> @repo.all
-    |> List.first
   end
 
   defp defend_conn(conn, {nil, _}),

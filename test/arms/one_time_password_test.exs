@@ -93,4 +93,20 @@ defmodule Shield.Arm.OneTimePasswordTest do
     result = OneTimePasswordPlug.enable(user, otp_secret, otp_value)
     assert {:error, %{otp_value: ["Invalid one time password"]}} == result
   end
+
+  test "#is_valid?" do
+    otp_secret = Otp.gen_secret
+    otp_value = Otp.gen_totp(otp_secret)
+    assert OneTimePasswordPlug.is_valid?(otp_secret, otp_value)
+    refute OneTimePasswordPlug.is_valid?(otp_secret, "1234567")
+  end
+
+  test "#find_otp_secret_token" do
+    user = insert(:user, settings: %{})
+    otp_secret = Otp.gen_secret
+    otp_value = Otp.gen_totp(otp_secret)
+    {:ok, _} = OneTimePasswordPlug.enable(user, otp_secret, otp_value)
+
+    refute is_nil(OneTimePasswordPlug.find_otp_secret_token(user))
+  end
 end

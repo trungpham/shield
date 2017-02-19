@@ -13,7 +13,8 @@ config :shield, Shield.Endpoint,
   render_errors: [accepts: ~w(json), format: "json"]
 
 config :shield,
-  confirmable: true,
+  confirmable: false,
+  one_time_password_enabled: false,
   hooks: Shield.Hook.Default,
   views: %{
     changeset: Shield.ChangesetView,

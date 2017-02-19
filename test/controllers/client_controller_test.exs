@@ -24,12 +24,12 @@ defmodule Shield.ClientControllerTest do
   end
 
   test "lists all entries on index", %{conn: conn} do
-    conn = get conn, client_path(conn, :index)
+    conn = get(conn, client_path(conn, :index))
     assert json_response(conn, 200)["clients"] |> Enum.count == 1
   end
 
   test "shows chosen resource", %{conn: conn, client: client} do
-    conn = get conn, client_path(conn, :show, client)
+    conn = get(conn, client_path(conn, :show, client))
     assert json_response(conn, 200)["client"] == %{"id" => client.id,
       "name" => client.name,
       "secret" => client.secret,
@@ -41,40 +41,40 @@ defmodule Shield.ClientControllerTest do
   end
 
   test "does not show resource and instead throw error when id is nonexistent", %{conn: conn} do
-    conn = get conn, client_path(conn, :show, "11111111-1111-1111-1111-111111111111")
+    conn = get(conn, client_path(conn, :show, "11111111-1111-1111-1111-111111111111"))
     assert response(conn, 404)
   end
 
   test "creates and renders resource when data is valid", %{conn: conn} do
-    conn = post conn, client_path(conn, :create), client: Map.put(@valid_attrs, :name, "testclient")
+    conn = post(conn, client_path(conn, :create), client: Map.put(@valid_attrs, :name, "testclient"))
     assert json_response(conn, 201)["client"]["id"]
   end
 
   test "does not create resource and renders errors when data is invalid", %{conn: conn} do
-    conn = post conn, client_path(conn, :create), client: @invalid_attrs
+    conn = post(conn, client_path(conn, :create), client: @invalid_attrs)
     assert json_response(conn, 422)["errors"] != %{}
   end
 
   test "updates and renders chosen resource when data is valid", %{conn: conn, client: client} do
-    conn = put conn, client_path(conn, :update, client), client: @valid_attrs
+    conn = put(conn, client_path(conn, :update, client), client: @valid_attrs)
     assert json_response(conn, 200)["client"]["settings"]["language"] == "EN"
     assert @repo.get(@client, client.id).settings["language"] == "EN"
   end
 
   test "does not update chosen resource and renders errors when data is invalid", %{conn: conn, client: client} do
-    conn = put conn, client_path(conn, :update, client), client: @invalid_attrs
+    conn = put(conn, client_path(conn, :update, client), client: @invalid_attrs)
     assert json_response(conn, 422)["errors"] != %{}
   end
 
   test "does not update chosen resource and renders previous secret", %{conn: conn, client: client} do
     new_secret = "fooloo"
-    conn = put conn, client_path(conn, :update, client), client: Map.put(@valid_attrs, :secret, new_secret)
+    conn = put(conn, client_path(conn, :update, client), client: Map.put(@valid_attrs, :secret, new_secret))
     assert @repo.get(@client, client.id).secret != new_secret
     assert json_response(conn, 200)["client"]["secret"] != new_secret
   end
 
   test "deletes chosen resource", %{conn: conn, client: client} do
-    conn = delete conn, client_path(conn, :delete, client)
+    conn = delete(conn, client_path(conn, :delete, client))
     assert response(conn, 204)
     refute @repo.get(@client, client.id)
   end

@@ -5,6 +5,7 @@ defmodule Shield.SettingController do
 
   plug Authable.Plug.Authenticate, [scopes: ~w(session read write)] when action in [:update]
   plug Authable.Plug.Authenticate, [scopes: ~w(read)] when action in [:index]
+  plug Shield.Arm.Confirmable, [enabled: Application.get_env(:shield, :confirmable)]
 
   # GET /settings
   def index(conn, _) do
@@ -14,7 +15,7 @@ defmodule Shield.SettingController do
 
   # PUT /settings/one_time_password
   def update(conn, %{"setting" => %{"one_time_password" => %{"action" => "enable", "otp_secret" => otp_secret, "otp_value" => otp_value}}}) do
-    if Application.get_env(:shield, :one_time_password_enabled) do
+    if Application.get_env(:shield, :otp_check) do
       user = conn.assigns[:current_user]
       case Shield.Arm.OneTimePassword.enable(user, otp_secret, otp_value) do
         {:error, errors} ->
@@ -28,7 +29,7 @@ defmodule Shield.SettingController do
     end
   end
   def update(conn, %{"setting" => %{"one_time_password" => %{"action" => "disable", "otp_value" => otp_value}}}) do
-    if Application.get_env(:shield, :one_time_password_enabled) do
+    if Application.get_env(:shield, :otp_check) do
       user = conn.assigns[:current_user]
       case Shield.Arm.OneTimePassword.disable(user, otp_value) do
         {:error, errors} ->
