@@ -4,6 +4,7 @@ defmodule Shield.UserController do
   alias Shield.Policy.Login, as: LoginPolicy
   alias Shield.Notifier.Channel.Email, as: EmailChannel
   alias Authable.Utils.Crypt, as: CryptUtil
+  alias Shield.Query.Token, as: TokenQuery
 
   @repo Application.get_env(:authable, :repo)
   @user Application.get_env(:authable, :resource_owner)
@@ -51,14 +52,19 @@ defmodule Shield.UserController do
 
   # POST /users/reset-password
   def reset_password(conn, %{"user" => %{"password" => new_password, "reset_token" => reset_token}}) do
-    query = from t in @token_store,
-          where: t.value == ^reset_token and
-          t.name == "reset_token" and
-          t.expires_at > ^:os.system_time(:seconds),
-          preload: [:user],
-          limit: 1
+    token =
+      reset_token
+      |> TokenQuery.valid_reset_token()
+      |> @repo.get_by([])
 
-    reset_password(conn, List.first(@repo.all(query)), new_password)
+    case token do
+      nil ->
+        @renderer.render(conn, :forbidden, %{errors:
+          %{reset_token: "Invalid token."}})
+      _ ->
+        @repo.delete!(token)
+        change_password(conn, true, token.user, new_password)
+    end
   end
 
   # POST /users/change-password
@@ -106,13 +112,13 @@ defmodule Shield.UserController do
 
   # DELETE /users/logout
   def logout(conn, _) do
-    token_value = conn |> fetch_session |> get_session(:session_token)
+    token_value = get_session(fetch_session(conn), :session_token)
     token = @repo.get_by!(@token_store, name: "session_token",
-              value: token_value)
+      value: token_value)
     @repo.delete!(token)
 
     conn
-    |> fetch_session
+    |> fetch_session()
     |> configure_session(drop: true)
     |> send_resp(:no_content, "")
   end
@@ -134,12 +140,8 @@ defmodule Shield.UserController do
         recover_password_url = String.replace((Map.get(@front_end, :base) <>
           Map.get(@front_end, :reset_password_path)), "{{reset_token}}",
           token.value)
-        EmailChannel.deliver(
-          [user.email],
-          :recover_password,
-          %{identity: user.email,
-            recover_password_url: recover_password_url}
-        )
+        EmailChannel.deliver([user.email], :recover_password,
+          %{identity: user.email, recover_password_url: recover_password_url})
 
         @renderer.render(conn, :created, %{messages: "Email sent!"})
       {:error, _} ->
@@ -147,15 +149,6 @@ defmodule Shield.UserController do
         |> put_status(:unprocessable_entity)
         |> render(@views[:error], "422.json")
     end
-  end
-
-  defp reset_password(conn, nil, _) do
-    @renderer.render(conn, :forbidden, %{errors:
-      %{reset_token: "Invalid token."}})
-  end
-  defp reset_password(conn, token, password) do
-    @repo.delete!(token)
-    change_password(conn, true, token.user, password)
   end
 
   defp change_password(conn, false, _, _) do
@@ -176,7 +169,7 @@ defmodule Shield.UserController do
 
   defp insert_session_token(conn, user) do
     changeset = @token_store.session_token_changeset(%@token_store{},
-                  %{user_id: user.id, details: %{"scope" => "session"}})
+      %{user_id: user.id, details: %{"scope" => "session"}})
     case @repo.insert(changeset) do
       {:ok, token} ->
         conn

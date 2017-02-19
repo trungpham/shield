@@ -2,6 +2,7 @@ defmodule Shield.AppController do
   use Shield.Web, :controller
   use Shield.HookImporter
   alias Authable.OAuth2, as: OAuth2
+  alias Shield.Query.App, as: AppQuery
 
   @repo Application.get_env(:authable, :repo)
   @app Application.get_env(:authable, :app)
@@ -17,27 +18,24 @@ defmodule Shield.AppController do
 
   # GET /apps
   def index(conn, _params) do
-    query = (from a in @app,
-             preload: [:client],
-             where: a.user_id == ^conn.assigns[:current_user].id)
-    apps = @repo.all(query)
+    apps =
+      conn.assigns[:current_user]
+      |> AppQuery.user_apps()
+      |> @repo.all()
 
     render(conn, @views[:app], "index.json", apps: apps)
   end
 
   # GET /apps/:id
   def show(conn, %{"id" => id}) do
-    query = (from a in @app,
-             preload: [:client],
-             where: a.id == ^id and
-                    a.user_id == ^conn.assigns[:current_user].id, limit: 1)
-    apps = @repo.all(query)
+    app =
+      conn.assigns[:current_user]
+      |> AppQuery.user_app(id)
+      |> @repo.get_by([])
 
-    case List.first(apps) do
+    case app do
       nil ->
-        conn
-        |> put_status(:not_found)
-        |> render(@views[:error], "404.json")
+        render(put_status(conn, :not_found), @views[:error], "404.json")
       app ->
         render(conn, @views[:app], "show.json", app: app)
     end

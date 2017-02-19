@@ -1,6 +1,7 @@
 defmodule Shield.ClientController do
   use Shield.Web, :controller
   use Shield.HookImporter
+  alias Shield.Query.Client, as: ClientQuery
 
   @repo Application.get_env(:authable, :repo)
   @client Application.get_env(:authable, :client)
@@ -17,9 +18,10 @@ defmodule Shield.ClientController do
 
   # GET /clients
   def index(conn, _params) do
-    query = (from c in @client,
-             where: c.user_id == ^conn.assigns[:current_user].id)
-    clients = @repo.all(query)
+    clients =
+      conn.assigns[:current_user]
+      |> ClientQuery.user_clients()
+      |> @repo.all()
 
     render(conn, @views[:client], "index.json", clients: clients)
   end
@@ -66,10 +68,13 @@ defmodule Shield.ClientController do
 
   # PUT /clients/:id
   def update(conn, %{"id" => id, "client" => client_params}) do
-    client = @repo.get_by!(@client, id: id,
-                           user_id: conn.assigns[:current_user].id)
+    client =
+      conn.assigns[:current_user]
+      |> ClientQuery.user_client(id)
+      |> @repo.get_by!([])
+
     client_params = Map.put(client_params, "user_id",
-                            conn.assigns[:current_user].id)
+      conn.assigns[:current_user].id)
     changeset = @client.changeset(client, client_params)
 
     case @repo.update(changeset) do
@@ -89,8 +94,11 @@ defmodule Shield.ClientController do
 
   # DELETE /clients/:id
   def delete(conn, %{"id" => id}) do
-    client = @repo.get_by!(@client, id: id,
-                           user_id: conn.assigns[:current_user].id)
+    client =
+      conn.assigns[:current_user]
+      |> ClientQuery.user_client(id)
+      |> @repo.get_by!([])
+
     @repo.delete!(client)
 
     conn
