@@ -43,33 +43,17 @@ defmodule Shield.AppController do
 
   # POST /apps/authorize
   def authorize(conn, %{"app" => params}) do
-    result = OAuth2.authorize_app(conn.assigns[:current_user], params)
+    result = OAuth2.grant_app_authorization(conn.assigns[:current_user], params)
     case result do
       {:error, errors, http_status_code} ->
         conn
         |> @hooks.after_app_authorize_failure(errors, http_status_code)
         |> @renderer.render(http_status_code, %{errors: errors})
-      app ->
-        changeset = @token_store.authorization_code_changeset(%@token_store{}, %{
-          user_id: conn.assigns[:current_user].id,
-          details: %{
-            client_id: params["client_id"],
-            redirect_uri: params["redirect_uri"],
-            scope: app.scope
-          }
-        })
-        case @repo.insert(changeset) do
-          {:ok, token} ->
-            conn
-            |> @hooks.after_app_authorize_success(token)
-            |> put_status(:created)
-            |> render(@views[:token], "show.json", token: token)
-          {:error, errors} ->
-            conn
-            |> @hooks.after_app_authorize_failure(errors, :unprocessable_entity)
-            |> put_status(:unprocessable_entity)
-            |> render(@views[:error], "422.json")
-        end
+      %{"token" => token} ->
+        conn
+        |> @hooks.after_app_authorize_success(token)
+        |> put_status(:created)
+        |> render(@views[:token], "show.json", token: token)
     end
   end
 

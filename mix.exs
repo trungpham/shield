@@ -38,13 +38,14 @@ defmodule Shield.Mixfile do
      {:phoenix_ecto, "~> 3.2.1"},
      {:gettext, "~> 0.13"},
      {:cowboy, "~> 1.0.4"},
-     {:authable, "~> 0.7.0"},
+     {:authable, "~> 0.8.0"},
      {:shield_notifier, "~> 0.2.0"},
      {:cors_plug, "~> 1.1.4"},
      {:poison, "~> 2.0 or ~> 3.0 or ~> 3.1"},
      {:ex_machina, "~> 1.0.1", only: :test},
      {:credo, "~> 0.6.1", only: :dev},
-     {:ex_doc, ">= 0.14.5", only: :dev}
+     {:ex_doc, ">= 0.14.5", only: :dev},
+     {:dialyxir, "~> 0.4", only: [:dev], runtime: false}
    ]
   end
 
