@@ -14,24 +14,19 @@ defmodule Shield.TokenController do
 
   # GET /tokens/:id
   def show(conn, %{"id" => token_value, "client_id" => client_id, "client_secret" => secret}) do
-    token = @repo.get_by(@token_store, value: token_value)
-    if is_nil(token) do
-      conn
-      |> put_status(:not_found)
-      |> render(@views[:error], "404.json")
-      |> halt
-    else
-      client = @repo.get_by(@client, id: client_id, secret: secret)
-      if is_nil(client) ||
-        Map.get(token.details, "client_id", "") != client_id do
-        conn
-        |> put_status(:not_found)
-        |> render(@views[:error], "404.json")
-      else
-        conn
-        |> put_status(:ok)
-        |> render(@views[:token], "show.json", token: token)
-      end
+    case @repo.get_by(@token_store, value: token_value) do
+      nil ->
+        render(put_status(conn, :not_found), @views[:error], "404.json")
+      token ->
+        client = @repo.get_by(@client, id: client_id, secret: secret)
+        if is_nil(client) ||
+          Map.get(token.details, "client_id", "") != client_id do
+          render(put_status(conn, :not_found), @views[:error], "404.json")
+        else
+          conn
+          |> put_status(:ok)
+          |> render(@views[:token], "show.json", token: token)
+        end
     end
   end
 
