@@ -1,11 +1,9 @@
 defmodule Shield.TokenController do
   use Shield.Web, :controller
   use Shield.HookImporter
-  alias Authable.OAuth2, as: OAuth2
+  alias Shield.Policy.Token.Authorize, as: AuthorizePolicy
+  alias Shield.Store.Token, as: TokenStore
 
-  @repo Application.get_env(:authable, :repo)
-  @client Application.get_env(:authable, :client)
-  @token_store Application.get_env(:authable, :token_store)
   @renderer Application.get_env(:authable, :renderer)
   @views Application.get_env(:shield, :views)
   @hooks Application.get_env(:shield, :hooks)
@@ -13,37 +11,29 @@ defmodule Shield.TokenController do
   plug :before_token_create when action in [:create]
 
   # GET /tokens/:id
-  def show(conn, %{"id" => token_value, "client_id" => client_id, "client_secret" => secret}) do
-    case @repo.get_by(@token_store, value: token_value) do
-      nil ->
-        render(put_status(conn, :not_found), @views[:error], "404.json")
-      token ->
-        client = @repo.get_by(@client, id: client_id, secret: secret)
-        if is_nil(client) ||
-          Map.get(token.details, "client_id", "") != client_id do
-          render(put_status(conn, :not_found), @views[:error], "404.json")
-        else
-          conn
-          |> put_status(:ok)
-          |> render(@views[:token], "show.json", token: token)
-        end
+  def show(conn, %{"id" => _, "client_id" => _, "client_secret" => _} = params) do
+    case TokenStore.client_token(params) do
+      {:ok, %{"token" => token}} ->
+        conn
+        |> put_status(:ok)
+        |> render(@views[:token], "show.json", token: token)
+      {:error, {http_status_code, errors}} ->
+        @renderer.render(conn, http_status_code, %{errors: errors})
     end
   end
 
   # POST /tokens
-  def create(conn, %{"token" => params}),
-    do: create(conn, params)
-  def create(conn, params) do
-    case OAuth2.authorize(params) do
-      {:error, errors, http_status_code} ->
+  def create(conn, %{"token" => token_params}) do
+    case AuthorizePolicy.process(token_params) do
+      {:ok, token} ->
         conn
-        |> @hooks.after_token_create_failure(errors, http_status_code)
-        |> @renderer.render(http_status_code, %{errors: errors})
-      token ->
-        conn
-        |> @hooks.after_token_create_success(token)
+        |> @hooks.after_token_create_success({token_params, token})
         |> put_status(:created)
         |> render(@views[:token], "show.json", token: token)
+      {:error, {http_status_code, errors} = res} ->
+        conn
+        |> @hooks.after_token_create_failure({token_params, res})
+        |> @renderer.render(http_status_code, %{errors: errors})
     end
   end
 end

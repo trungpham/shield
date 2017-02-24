@@ -1,16 +1,30 @@
-defmodule Shield.Policy.Login do
+defmodule Shield.Policy.User.Login do
+  @moduledoc """
+  User.Login policy
+  """
+
   alias Authable.Utils.Crypt, as: CryptUtil
   alias Shield.Arm.OneTimePassword, as: OneTimePasswordArm
 
   @repo Application.get_env(:authable, :repo)
   @user Application.get_env(:authable, :resource_owner)
+  @token_store Application.get_env(:authable, :token_store)
 
-  def check(params) do
+  @doc """
+  Runs login process for given params
+  - Validates email exists
+  - Validates password authentication
+  - Validates email confirmation if needed
+  - Validates one time password if needed
+  - Insert session token to DB
+  """
+  def process(params) do
     params
     |> validate_email_exists()
     |> validate_email_password_match()
     |> validate_email_confirmation()
     |> validate_one_time_password()
+    |> insert_session_token()
   end
 
   defp validate_email_exists(%{"email" => email} = params) do
@@ -70,4 +84,17 @@ defmodule Shield.Policy.Login do
         end
     end
   end
+
+  defp insert_session_token({:ok, %{"user" => user} = params}) do
+    changeset = @token_store.session_token_changeset(%@token_store{},
+      %{user_id: user.id, details: %{"scope" => "session"}})
+    case @repo.insert(changeset) do
+      {:ok, token} ->
+        {:ok, Map.put(params, "token", token)}
+      {:error, changeset} ->
+        {:error, {:unprocessable_entity, changeset}}
+    end
+  end
+  defp insert_session_token({:error, {_status, _errors} = opts}),
+    do: {:error, opts}
 end

@@ -313,7 +313,8 @@ defmodule Shield.Hook.Sample do
   ...
 
   def before_app_authorize(conn, params) do
-    # do sth...
+    # do sth async or sync...
+    # All hooks must return `Plug.Conn.t` type.
     conn
   end
   ...
@@ -322,30 +323,44 @@ end
 
 Here is supported hooks and return types:
 
+```
+  params is a map type
+  http_status_code is an atom type
+  res is an any type
+  conn is a Plug.Conn.t type
+```
+
 ```elixir
-def before_app_authorize(conn, _), do: conn
-def after_app_authorize_failure(conn, errors, status), do: conn
-def after_app_authorize_success(conn, token), do: conn
-def before_app_delete(conn, _), do: conn
-def after_app_delete(conn), do: conn
-def before_client_create(conn, _), do: conn
-def after_client_create_success(conn, client), do: conn
-def after_client_create_failure(conn, changeset), do: conn
-def before_client_update(conn, _), do: conn
-def after_client_update_failure(conn, changeset), do: conn
-def after_client_update_success(conn, client), do: conn
-def before_client_delete(conn, _), do: conn
-def after_client_delete(conn), do: conn
-def before_token_create(conn, _), do: conn
-def after_token_create_failure(conn, errors, status), do: conn
-def after_token_create_success(conn, token), do: conn
-def before_user_register(conn, _), do: conn
-def after_user_register_failure(conn, changeset), do: conn
-def after_user_register_success(conn, user), do: conn
-def before_user_login(conn, _), do: conn
-def after_user_login_failure(conn, errors, http_status_code), do: conn
-def after_user_login_token_failure(conn, changeset), do: conn
-def after_user_login_token_success(conn, token), do: conn
+  def before_app_authorize(conn, _params)
+  def before_app_delete(conn, _params)
+  def after_app_authorize_failure(conn, {_params, {_http_status_code, _res}})
+  def after_app_authorize_success(conn, {_params, _res})
+  def after_app_delete(conn, _params)
+  def before_client_create(conn, _params)
+  def before_client_update(conn, _params)
+  def before_client_delete(conn, _params)
+  def after_client_create_success(conn, {_params, _res})
+  def after_client_create_failure(conn, {_params, {_http_status_code, _res}})
+  def after_client_update_failure(conn, {_params, {_http_status_code, _res}})
+  def after_client_update_success(conn, {_params, _res})
+  def after_client_delete(conn, _params)
+  def before_token_create(conn, _params)
+  def after_token_create_failure(conn, {_params, {_http_status_code, _res}})
+  def after_token_create_success(conn, {_params, _res})
+  def before_user_register(conn, _params)
+  def before_user_login(conn, _params)
+  def after_user_change_password_failure(conn, {_params, {_http_status_code, _res}})
+  def after_user_change_password_success(conn, {_params, _res})
+  def after_user_confirm_failure(conn, {_params, {_http_status_code, _res}})
+  def after_user_confirm_success(conn, {_params, _res})
+  def after_user_login_failure(conn, {_params, {_http_status_code, _res}})
+  def after_user_login_success(conn, {_params, _res})
+  def after_user_recover_password_failure(conn, {_params, {_http_status_code, _res}})
+  def after_user_recover_password_success(conn, {_params, _res})
+  def after_user_register_failure(conn, {_params, {_http_status_code, _res}})
+  def after_user_register_success(conn, {_params, _res})
+  def after_user_reset_password_failure(conn, {_params, {_http_status_code, _res}})
+  def after_user_reset_password_success(conn, {_params, _res})
 ```
 
 ## Client Implementations

@@ -2,11 +2,9 @@ defmodule Shield.AppController do
   use Shield.Web, :controller
   use Shield.HookImporter
   alias Authable.OAuth2, as: OAuth2
-  alias Shield.Query.App, as: AppQuery
+  alias Shield.Store.App, as: AppStore
+  alias Shield.Policy.App.Grant, as: GrantPolicy
 
-  @repo Application.get_env(:authable, :repo)
-  @app Application.get_env(:authable, :app)
-  @token_store Application.get_env(:authable, :token_store)
   @views Application.get_env(:shield, :views)
   @renderer Application.get_env(:authable, :renderer)
 
@@ -18,20 +16,13 @@ defmodule Shield.AppController do
 
   # GET /apps
   def index(conn, _params) do
-    apps =
-      conn.assigns[:current_user]
-      |> AppQuery.user_apps()
-      |> @repo.all()
-
+    apps = AppStore.user_apps(conn.assigns[:current_user])
     render(conn, @views[:app], "index.json", apps: apps)
   end
 
   # GET /apps/:id
   def show(conn, %{"id" => id}) do
-    app =
-      conn.assigns[:current_user]
-      |> AppQuery.user_app(id)
-      |> @repo.get_by([])
+    app = AppStore.user_app(conn.assigns[:current_user], id)
 
     case app do
       nil ->
@@ -42,27 +33,27 @@ defmodule Shield.AppController do
   end
 
   # POST /apps/authorize
-  def authorize(conn, %{"app" => params}) do
-    result = OAuth2.grant_app_authorization(conn.assigns[:current_user], params)
-    case result do
-      {:error, errors, http_status_code} ->
+  def authorize(conn, %{"app" => app_params}) do
+    params = Map.put(app_params, "user", conn.assigns[:current_user])
+    case GrantPolicy.process(params) do
+      {:ok, %{"token" => token} = res} ->
         conn
-        |> @hooks.after_app_authorize_failure(errors, http_status_code)
-        |> @renderer.render(http_status_code, %{errors: errors})
-      %{"token" => token} ->
-        conn
-        |> @hooks.after_app_authorize_success(token)
+        |> @hooks.after_app_authorize_success({app_params, res})
         |> put_status(:created)
         |> render(@views[:token], "show.json", token: token)
+      {:error, {http_status_code, errors} = res} ->
+        conn
+        |> @hooks.after_app_authorize_failure({app_params, res})
+        |> @renderer.render(http_status_code, %{errors: errors})
     end
   end
 
   # DELETE /apps/:id
-  def delete(conn, %{"id" => id}) do
+  def delete(conn, %{"id" => id} = app_params) do
     OAuth2.revoke_app_authorization(conn.assigns[:current_user], %{"id" => id})
 
     conn
-    |> @hooks.after_app_delete
+    |> @hooks.after_app_delete(app_params)
     |> send_resp(:no_content, "")
   end
 end
