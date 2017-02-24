@@ -1,17 +1,16 @@
 defmodule Shield.UserController do
   use Shield.Web, :controller
   use Shield.HookImporter
-  alias Shield.Policy.Login, as: LoginPolicy
-  alias Shield.Notifier.Channel.Email, as: EmailChannel
-  alias Authable.Utils.Crypt, as: CryptUtil
-  alias Shield.Query.Token, as: TokenQuery
+  alias Shield.Policy.User.ChangePassword, as: ChangePasswordPolicy
+  alias Shield.Policy.User.Confirm, as: ConfirmPolicy
+  alias Shield.Policy.User.Login, as: LoginPolicy
+  alias Shield.Policy.User.Logout, as: LogoutPolicy
+  alias Shield.Policy.User.RecoverPassword, as: RecoverPasswordPolicy
+  alias Shield.Policy.User.Register, as: RegisterPolicy
+  alias Shield.Policy.User.ResetPassword, as: ResetPasswordPolicy
 
-  @repo Application.get_env(:authable, :repo)
-  @user Application.get_env(:authable, :resource_owner)
-  @token_store Application.get_env(:authable, :token_store)
   @renderer Application.get_env(:authable, :renderer)
   @views Application.get_env(:shield, :views)
-  @front_end Application.get_env(:shield, :front_end)
 
   plug :scrub_params, "user" when action in [:register, :login]
   plug :before_user_register when action in [:register]
@@ -30,92 +29,112 @@ defmodule Shield.UserController do
   end
 
   # GET /users/confirm
-  def confirm(conn, %{"confirmation_token" => token_value}) do
-    case Shield.Arm.Confirmable.confirm(token_value) do
-      {:error, %{confirmation_token: error}} ->
-        @renderer.render(conn, :forbidden, %{errors:
-          %{confirmation_token: error}})
-      {:error, changeset} ->
+  def confirm(conn, %{"confirmation_token" => _} = user_params) do
+    case ConfirmPolicy.process(user_params) do
+      {:ok, res} ->
         conn
-        |> put_status(:unprocessable_entity)
-        |> render(@views[:changeset], "error.json", changeset: changeset)
-      {:ok, _} ->
-        @renderer.render(conn, :ok,
-          %{messages: "Email confirmed successfully!"})
+        |> @hooks.after_user_confirm_success({user_params, res})
+        |> @renderer.render(:ok, res)
+      {:error, {http_status_code, %Ecto.Changeset{} = errors} = res} ->
+        conn
+        |> @hooks.after_user_confirm_failure({user_params, res})
+        |> put_status(http_status_code)
+        |> render(@views[:changeset], "error.json", changeset: errors)
+      {:error, {http_status_code, errors} = res} ->
+        conn
+        |> @hooks.after_user_confirm_failure({user_params, res})
+        |> @renderer.render(http_status_code, %{errors: errors})
     end
+  end
+  def confirm(conn, _) do
+    @renderer.render(conn, :unprocessable_entity, %{errors:
+      %{details: "Missing confirmation_token data!"}})
   end
 
   # POST /users/recover-password
-  def recover_password(conn, %{"user" => %{"email" => email}}) do
-    recover_user_password(conn, @repo.get_by(@user, email: email))
-  end
-
-  # POST /users/reset-password
-  def reset_password(conn, %{"user" => %{"password" => new_password, "reset_token" => reset_token}}) do
-    token =
-      reset_token
-      |> TokenQuery.valid_reset_token()
-      |> @repo.get_by([])
-
-    case token do
-      nil ->
-        @renderer.render(conn, :forbidden, %{errors:
-          %{reset_token: "Invalid token."}})
-      _ ->
-        @repo.delete!(token)
-        change_password(conn, true, token.user, new_password)
+  def recover_password(conn, %{"user" => %{"email" => _} = user_params}) do
+    case RecoverPasswordPolicy.process(user_params) do
+      {:ok, %{"user" => user, "token" => token} = res} ->
+        conn
+        |> @hooks.after_user_recover_password_success({user_params, res})
+        |> assign(:current_user, user)
+        |> fetch_session
+        |> put_session(:session_token, token.value)
+        |> configure_session(renew: true)
+        |> put_status(:created)
+        |> render(@views[:user], "show.json", user: user)
+      {:error, {http_status_code, %Ecto.Changeset{} = errors} = res} ->
+        conn
+        |> @hooks.after_user_recover_password_failure({user_params, res})
+        |> put_status(http_status_code)
+        |> render(@views[:changeset], "error.json", changeset: errors)
+      {:error, {http_status_code, errors} = res} ->
+        conn
+        |> @hooks.after_user_recover_password_failure({user_params, res})
+        |> @renderer.render(http_status_code, %{errors: errors})
     end
   end
-
-  # POST /users/change-password
-  def change_password(conn, %{"user" => %{"password" => new_password, "old_password" => old_password}}) do
-    is_password_matched = CryptUtil.match_password(old_password,
-      Map.get(conn.assigns[:current_user], :password, ""))
-    change_password(conn, is_password_matched,
-      conn.assigns[:current_user], new_password)
+  def recover_password(conn, _) do
+    @renderer.render(conn, :unprocessable_entity, %{errors:
+      %{details: "Missing email data!"}})
   end
 
   # POST /users/register
-  def register(conn, %{"user" => user_params}) do
-    changeset = @user.registration_changeset(%@user{}, user_params)
-    case @repo.insert(changeset) do
-      {:ok, user} ->
-        confirmable = Application.get_env(:shield, :confirmable)
-        if confirmable, do: Shield.Arm.Confirmable.registration_hook(user)
+  def register(conn, %{"user" => %{"email" => _, "password" => _} = user_params}) do
+    case RegisterPolicy.process(user_params) do
+      {:ok, %{"user" => user} = res} ->
         conn
-        |> @hooks.after_user_register_success(user)
+        |> @hooks.after_user_register_success({user_params, res})
         |> put_status(:created)
         |> render(@views[:user], "show.json", user: user)
-      {:error, changeset} ->
+      {:error, {http_status_code, %Ecto.Changeset{} = errors} = res} ->
         conn
-        |> @hooks.after_user_register_failure(changeset)
-        |> put_status(:unprocessable_entity)
-        |> render(@views[:changeset], "error.json", changeset: changeset)
+        |> @hooks.after_user_login_failure({user_params, res})
+        |> put_status(http_status_code)
+        |> render(@views[:changeset], "error.json", changeset: errors)
+      {:error, {http_status_code, errors} = res} ->
+        conn
+        |> @hooks.after_user_register_failure({user_params, res})
+        |> @renderer.render(http_status_code, %{errors: errors})
     end
+  end
+  def register(conn, _) do
+    @renderer.render(conn, :unprocessable_entity, %{errors:
+      %{details: "Missing email or password data!"}})
   end
 
   # POST /users/login
-  def login(conn, %{"user" => %{"email" => email, "password" => password} = params}) when is_binary(password) and is_binary(email) do
-    case LoginPolicy.check(params) do
-      {:error, {http_status_code, errors}} ->
+  def login(conn, %{"user" => %{"email" => email, "password" => password} = user_params}) when is_binary(password) and is_binary(email) do
+    case LoginPolicy.process(user_params) do
+      {:ok, %{"user" => user, "token" => token} = res} ->
         conn
-        |> @hooks.after_user_login_failure(errors, http_status_code)
+        |> @hooks.after_user_login_success({user_params, res})
+        |> assign(:current_user, user)
+        |> fetch_session
+        |> put_session(:session_token, token.value)
+        |> configure_session(renew: true)
+        |> put_status(:created)
+        |> render(@views[:user], "show.json", user: user)
+      {:error, {http_status_code, %Ecto.Changeset{} = errors} = res} ->
+        conn
+        |> @hooks.after_user_login_failure({user_params, res})
+        |> put_status(http_status_code)
+        |> render(@views[:changeset], "error.json", changeset: errors)
+      {:error, {http_status_code, errors} = res} ->
+        conn
+        |> @hooks.after_user_login_failure({user_params, res})
         |> @renderer.render(http_status_code, %{errors: errors})
-      {:ok, %{"user" => user}} ->
-        insert_session_token(conn, user)
     end
   end
   def login(conn, _) do
     @renderer.render(conn, :unprocessable_entity, %{errors:
-      %{details: "Invalid email or password format!"}})
+      %{details: "Missing email or password data!"}})
   end
 
   # DELETE /users/logout
   def logout(conn, _) do
     token_value = get_session(fetch_session(conn), :session_token)
-    token = @repo.get_by!(@token_store, name: "session_token",
-      value: token_value)
-    @repo.delete!(token)
+    LogoutPolicy.process(%{"token_value" => token_value})
 
     conn
     |> fetch_session()
@@ -123,68 +142,50 @@ defmodule Shield.UserController do
     |> send_resp(:no_content, "")
   end
 
-  defp recover_user_password(conn, nil) do
-    conn
-    |> put_status(:not_found)
-    |> render(@views[:error], "404.json")
-  end
-  defp recover_user_password(conn, user) do
-    changeset = @token_store.changeset(%@token_store{}, %{
-      user_id: user.id,
-      name: "reset_token",
-      expires_at: :os.system_time(:seconds) + 3600
-    })
-
-    case @repo.insert(changeset) do
-      {:ok, token} ->
-        recover_password_url = String.replace((Map.get(@front_end, :base) <>
-          Map.get(@front_end, :reset_password_path)), "{{reset_token}}",
-          token.value)
-        EmailChannel.deliver([user.email], :recover_password,
-          %{identity: user.email, recover_password_url: recover_password_url})
-
-        @renderer.render(conn, :created, %{messages: "Email sent!"})
-      {:error, _} ->
+  # POST /users/reset-password
+  def reset_password(conn, %{"user" => %{"password" => _, "reset_token" => _} = user_params}) do
+    case ResetPasswordPolicy.process(user_params) do
+      {:ok, res} ->
         conn
-        |> put_status(:unprocessable_entity)
-        |> render(@views[:error], "422.json")
+        |> @hooks.after_user_reset_password_success({user_params, res})
+        |> @renderer.render(:ok, %{messages: "Password updated!"})
+      {:error, {http_status_code, %Ecto.Changeset{} = errors} = res} ->
+        conn
+        |> @hooks.after_user_reset_password_failure({user_params, res})
+        |> put_status(http_status_code)
+        |> render(@views[:changeset], "error.json", changeset: errors)
+      {:error, {http_status_code, errors} = res} ->
+        conn
+        |> @hooks.after_user_reset_password_failure({user_params, res})
+        |> @renderer.render(http_status_code, %{errors: errors})
     end
   end
-
-  defp change_password(conn, false, _, _) do
-    @renderer.render(conn, :forbidden, %{errors:
-      %{old_password: "Wrong old password."}})
-  end
-  defp change_password(conn, true, user, password) do
-    changeset = @user.password_changeset(user, %{password: password})
-    case @repo.update(changeset) do
-      {:ok, _} ->
-        @renderer.render(conn, :ok, %{messages: "Password updated!"})
-      {:error, changeset} ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> render(@views[:changeset], "error.json", changeset: changeset)
-    end
+  def reset_password(conn, _) do
+    @renderer.render(conn, :unprocessable_entity, %{errors:
+      %{details: "Missing password or reset_token data!"}})
   end
 
-  defp insert_session_token(conn, user) do
-    changeset = @token_store.session_token_changeset(%@token_store{},
-      %{user_id: user.id, details: %{"scope" => "session"}})
-    case @repo.insert(changeset) do
-      {:ok, token} ->
+  # POST /users/change-password
+  def change_password(conn, %{"user" => %{"password" => _, "old_password" => _} = user_params}) do
+    params_with_user = Map.put(user_params, "user", conn.assigns[:current_user])
+    case ChangePasswordPolicy.process(params_with_user) do
+      {:ok, res} ->
         conn
-        |> @hooks.after_user_login_token_success(token)
-        |> assign(:current_user, user)
-        |> fetch_session
-        |> put_session(:session_token, token.value)
-        |> configure_session(renew: true)
-        |> put_status(:created)
-        |> render(@views[:user], "show.json", user: user)
-      {:error, changeset} ->
+        |> @hooks.after_user_change_password_success({user_params, res})
+        |> @renderer.render(:ok, %{messages: "Password updated!"})
+      {:error, {http_status_code, %Ecto.Changeset{} = errors} = res} ->
         conn
-        |> @hooks.after_user_login_token_failure(changeset)
-        |> put_status(:unprocessable_entity)
-        |> render(@views[:changeset], "error.json", changeset: changeset)
+        |> @hooks.after_user_change_password_failure({user_params, res})
+        |> put_status(http_status_code)
+        |> render(@views[:changeset], "error.json", changeset: errors)
+      {:error, {http_status_code, errors} = res} ->
+        conn
+        |> @hooks.after_user_change_password_failure({user_params, res})
+        |> @renderer.render(http_status_code, %{errors: errors})
     end
+  end
+  def change_password(conn, _) do
+    @renderer.render(conn, :unprocessable_entity, %{errors:
+      %{details: "Missing password or old_password data!"}})
   end
 end

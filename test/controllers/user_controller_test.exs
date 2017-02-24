@@ -39,28 +39,28 @@ defmodule Shield.UserControllerTest do
   test "a GET request to /confirm with a valid token", %{conn: conn, user: user} do
     Application.put_env(:shield, :confirmable, true)
     token = insert(:confirmation_token, user_id: user.id)
-    params = %{confirmation_token: token.value}
+    params = %{"confirmation_token" => token.value}
 
     conn = get(conn, user_path(conn, :confirm), params)
     assert response(conn, 200)
   end
 
   test "a GET request to /confirm with invalid token", %{conn: conn} do
-    params = %{confirmation_token: "invalidtoken"}
+    params = %{"confirmation_token" => "invalidtoken"}
     conn = get(conn, user_path(conn, :confirm), params)
     assert response(conn, 403)
   end
 
   test "a POST request to /reset_password with a valid token", %{conn: conn, user: user} do
     token = insert(:reset_token, user_id: user.id)
-    params = %{password: "abcd1234", reset_token: token.value}
+    params = %{"password" => "abcd1234", "reset_token" => token.value}
     conn = post(conn, user_path(conn, :reset_password), user: params)
     assert response(conn, 200)
   end
 
   test "a POST request to /reset_password with a valid token and ensure that is not valid anymore", %{conn: conn, user: user} do
     token = insert(:reset_token, user_id: user.id)
-    params = %{password: "abcd1234", reset_token: token.value}
+    params = %{"password" => "abcd1234", "reset_token" => token.value}
     conn = post(conn, user_path(conn, :reset_password), user: params)
     assert response(conn, 200)
     conn = post(conn, user_path(conn, :reset_password), user: params)
@@ -68,44 +68,47 @@ defmodule Shield.UserControllerTest do
   end
 
   test "a POST request to /reset_password with invalid token", %{conn: conn} do
-    params = %{password: "abcd1234", reset_token: "invalidtoken"}
+    params = %{"password" => "abcd1234", "reset_token" => "invalidtoken"}
     conn = post(conn, user_path(conn, :reset_password), user: params)
     assert response(conn, 403)
   end
 
   test "a POST request to /reset_password with invalid new password", %{conn: conn, user: user} do
     token = insert(:reset_token, user_id: user.id)
-    params = %{password: "1234567", reset_token: token.value}
+    params = %{"password" => "1234567", "reset_token" => token.value}
     conn = post(conn, user_path(conn, :reset_password), user: params)
     assert response(conn, 422)
   end
 
   test "a POST request to /change_password with a correct current password", %{conn: conn} do
-    params = %{password: "abcd1234", old_password: "12345678"}
-    conn = conn
-           |> sign_conn()
-           |> post(user_path(conn, :change_password), user: params)
+    params = %{"password" => "abcd1234", "old_password" => "12345678"}
+    conn =
+      conn
+      |> sign_conn()
+      |> post(user_path(conn, :change_password), user: params)
     assert response(conn, 200)
   end
 
   test "a POST request to /change_password with wrong current password", %{conn: conn} do
-    params = %{password: "abcd1234", old_password: "wrongpass"}
-    conn = conn
-           |> sign_conn()
-           |> post(user_path(conn, :change_password), user: params)
+    params = %{"password" => "abcd1234", "old_password" => "wrongpass"}
+    conn =
+      conn
+      |> sign_conn()
+      |> post(user_path(conn, :change_password), user: params)
     assert response(conn, 403)
   end
 
   test "a POST request to /change_password with invalid new password", %{conn: conn} do
-    params = %{password: "1234567", old_password: "12345678"}
-    conn = conn
-           |> sign_conn()
-           |> post(user_path(conn, :change_password), user: params)
+    params = %{"password" => "1234567", "old_password" => "12345678"}
+    conn =
+      conn
+      |> sign_conn()
+      |> post(user_path(conn, :change_password), user: params)
     assert response(conn, 422)
   end
 
   test "a POST request to /register with valid email and password", %{conn: conn} do
-    params = %{email: "loo@bar.com", password: "12345678"}
+    params = %{"email" => "loo@bar.com", "password" => "12345678"}
     conn = post conn, user_path(conn, :register), user: params
     user = json_response(conn, 201)["user"]
     assert user
@@ -114,27 +117,28 @@ defmodule Shield.UserControllerTest do
   end
 
   test "a POST request to /register with valid email and password and session", %{conn: conn} do
-    params = %{email: "loo@bar.com", password: "12345678"}
-    conn = conn
-           |> sign_conn()
-           |> post(user_path(conn, :register), user: params)
+    params = %{"email" => "loo@bar.com", "password" => "12345678"}
+    conn =
+      conn
+      |> sign_conn()
+      |> post(user_path(conn, :register), user: params)
     assert response(conn, 400)
   end
 
   test "a POST request to /register with missing password", %{conn: conn} do
-    params = %{email: "loo@foobar.com", password: ""}
+    params = %{"email" => "loo@foobar.com", "password" => ""}
     conn = post conn, user_path(conn, :register), user: params
     assert response(conn, 422)
   end
 
   test "a POST request to /register with malformed email", %{conn: conn} do
-    params = %{email: "foonoatbar.com", password: "12345678"}
+    params = %{"email" => "foonoatbar.com", "password" => "12345678"}
     conn = post conn, user_path(conn, :register), user: params
     assert response(conn, 422)
   end
 
   test "a POST request to /login with valid email & password", %{conn: conn} do
-    params = %{email: "foo@bar.com", password: "12345678"}
+    params = %{"email" => "foo@bar.com", "password" => "12345678"}
     conn = post conn, user_path(conn, :login), user: params
     user = json_response(conn, 201)["user"]
     token_value = conn |> fetch_session |> get_session("session_token")
@@ -151,7 +155,8 @@ defmodule Shield.UserControllerTest do
     otp_value = Otp.gen_totp(otp_secret)
     OneTimePassword.enable(user, otp_secret, otp_value)
 
-    params = %{email: "foo@bar.com", password: "12345678", otp_value: otp_value}
+    params = %{"email" => "foo@bar.com", "password" => "12345678",
+      "otp_value" => otp_value}
     conn = post conn, user_path(conn, :login), user: params
     logged_in_user = json_response(conn, 201)["user"]
     token_value = conn |> fetch_session |> get_session("session_token")
@@ -168,7 +173,8 @@ defmodule Shield.UserControllerTest do
     otp_value = Otp.gen_totp(otp_secret)
     OneTimePassword.enable(user, otp_secret, otp_value)
 
-    params = %{email: "foo@bar.com", password: "12345678", otp_value: "123456"}
+    params = %{"email" => "foo@bar.com", "password" => "12345678",
+      "otp_value" => "123456"}
     conn = post(conn, user_path(conn, :login), user: params)
     assert response(conn, 401)
   end
@@ -176,27 +182,28 @@ defmodule Shield.UserControllerTest do
   test "a POST request to /login with valid email & password when confirmable but user not confirmed", %{conn: conn} do
     Application.put_env(:shield, :confirmable, true)
 
-    params = %{email: "foo@bar.com", password: "12345678"}
+    params = %{"email" => "foo@bar.com", "password" => "12345678"}
     conn = post(conn, user_path(conn, :login), user: params)
     assert response(conn, 401)
   end
 
   test "a POST request to /login with valid email & wrong password", %{conn: conn} do
-    params = %{email: "foo@bar.com", password: "87654321"}
+    params = %{"email" => "foo@bar.com", "password" => "87654321"}
     conn = post(conn, user_path(conn, :login), user: params)
     assert response(conn, 401)
   end
 
   test "a POST request to /login with non-existent email & password", %{conn: conn} do
-    params = %{email: "nonexistent@bar.com", password: "12345678"}
+    params = %{"email" => "nonexistent@bar.com", "password" => "12345678"}
     conn = post(conn, user_path(conn, :login), user: params)
     assert response(conn, 401)
   end
 
   test "a DELETE request to /logout with a valid session", %{conn: conn} do
-    conn = conn
-           |> sign_conn()
-           |> delete(user_path(conn, :logout))
+    conn =
+      conn
+      |> sign_conn()
+      |> delete(user_path(conn, :logout))
     assert response(conn, 204)
   end
 
