@@ -34,13 +34,13 @@ defmodule Shield.Mixfile do
   #
   # Type `mix help deps` for examples and options.
   defp deps do
-    [{:phoenix, "~> 1.2.0"},
+    [{:phoenix, "~> 1.3.0-rc.1"},
      {:phoenix_ecto, "~> 3.2.1"},
      {:gettext, "~> 0.13"},
-     {:cowboy, "~> 1.0.4"},
+     {:cowboy, "~> 1.1.0"},
      {:authable, "~> 0.8.0"},
      {:shield_notifier, "~> 0.2.0"},
-     {:cors_plug, "~> 1.1.4"},
+     {:cors_plug, "~> 1.2.0"},
      {:poison, "~> 2.0 or ~> 3.0 or ~> 3.1"},
      {:ex_machina, "~> 1.0.1", only: :test},
      {:credo, "~> 0.6.1", only: :dev},
