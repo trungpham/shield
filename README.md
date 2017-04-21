@@ -10,8 +10,7 @@ Shield can be used inside an application or can be used as standalone microservi
 
 The package can be installed as:
 
-  1. Add shield to your list of dependencies in `mix.exs` and run `mix deps.get
-`:
+1. Add shield to your list of dependencies in `mix.exs` and run `mix deps.get`:
 
     ```elixir
     def deps do
@@ -19,7 +18,7 @@ The package can be installed as:
     end
     ```
 
-  2. Ensure shield is started before your application:
+2. Ensure shield is started before your application:
 
     ```elixir
     def application do
@@ -27,7 +26,7 @@ The package can be installed as:
     end
     ```
 
-  3. Add authable configurations to your `config/config.exs` file:
+3. Add authable configurations to your `config/config.exs` file:
 
     ```elixir
     config :authable,
@@ -70,7 +69,7 @@ The package can be installed as:
       renderer: Authable.Renderer.RestApi
     ```
 
-  4. Add shield notifier configurations to your `config/config.exs` file:
+4. Add shield notifier configurations to your `config/config.exs` file:
 
     ```elixir
     config :shield_notifier,
@@ -84,15 +83,15 @@ The package can be installed as:
       }
     ```
 
-  5. Add your favorite mail sender Bamboo adapter configuration to your `config/prod.exs` file:
+5. Add your favorite mail sender Bamboo adapter configuration to your `config/prod.exs` file:
 
     ```elixir
     config :shield_notifier, Shield.Notifier.Mailer,
       adapter: Bamboo.SendgridAdapter,
       api_key: System.get_env("SENDGRID_API_KEY")
     ```
-
-  6. Add shield configurations to your `config/config.exs` file:
+    
+6. Add shield configurations to your `config/config.exs` file:
 
     ```elixir
     config :shield,
@@ -114,19 +113,19 @@ The package can be installed as:
         reset_password_path: "/users/reset-password?reset_token={{reset_token}}"
       }
     ```
+    
+    If you want to disable a authorization strategy, then delete it from shield configuration.
+    
+    If you want to add a new authorization strategy then add your own module.
 
-  If you want to disable a authorization strategy, then delete it from shield configuration.
-
-  If you want to add a new authorization strategy then add your own module.
-
-  5. Use installer to generate controllers, views, models and migrations from originals
+7. Use installer to generate controllers, views, models and migrations from originals
 
     ```elixir
     # Run only if you need to change behaviours, otherwise skip this.
     mix shield.install
     ```
 
-  6. Add database configurations for the `Authable.Repo` on env config files:
+8. Add database configurations for the `Authable.Repo` on env config files:
 
     ```elixir
     config :authable, Authable.Repo,
@@ -137,14 +136,15 @@ The package can be installed as:
       hostname: "",
       pool_size: 10
     ```
-  7. Run migrations for Authable.Repo (Note: all id fields are UUID type):
+
+9. Run migrations for Authable.Repo (Note: all id fields are UUID type):
 
     ```elixir
     mix ecto.create
     mix ecto.migrate -r Authable.Repo
     ```
 
-  8. Add routes
+10. Add routes
 
     ```elixir
     pipeline :api do
@@ -178,7 +178,7 @@ The package can be installed as:
     end
     ```
 
-  9. You are ready to go!
+9. You are ready to go!
 
 ### Standalone
 
