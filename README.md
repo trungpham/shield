@@ -14,7 +14,7 @@ The package can be installed as:
 
     ```elixir
     def deps do
-      [{:shield, "~> 0.6.0"}]
+      [{:shield, "~> 0.7.0"}]
     end
     ```
 
@@ -90,7 +90,7 @@ The package can be installed as:
       adapter: Bamboo.SendgridAdapter,
       api_key: System.get_env("SENDGRID_API_KEY")
     ```
-    
+
 6. Add shield configurations to your `config/config.exs` file:
 
     ```elixir
@@ -113,9 +113,9 @@ The package can be installed as:
         reset_password_path: "/users/reset-password?reset_token={{reset_token}}"
       }
     ```
-    
+
     If you want to disable a authorization strategy, then delete it from shield configuration.
-    
+
     If you want to add a new authorization strategy then add your own module.
 
 7. Use installer to generate controllers, views, models and migrations from originals
