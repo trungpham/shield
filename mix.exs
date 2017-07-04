@@ -3,7 +3,7 @@ defmodule Shield.Mixfile do
 
   def project do
     [app: :shield,
-     version: "0.6.0",
+     version: "0.7.0",
      elixir: "~> 1.3",
      elixirc_paths: elixirc_paths(Mix.env),
      compilers: [:phoenix, :gettext] ++ Mix.compilers,
@@ -14,7 +14,6 @@ defmodule Shield.Mixfile do
      aliases: aliases(),
      deps: deps(),
      docs: [extras: ["README.md"]]]
-
   end
 
   # Configuration for the OTP application.

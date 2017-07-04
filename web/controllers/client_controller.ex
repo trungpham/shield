@@ -1,15 +1,11 @@
 defmodule Shield.ClientController do
   use Shield.Web, :controller
-  use Shield.HookImporter
   alias Shield.Store.Client, as: ClientStore
 
   @views Application.get_env(:shield, :views)
   @hooks Application.get_env(:shield, :hooks)
 
   plug :scrub_params, "client" when action in [:create, :update]
-  plug :before_client_create when action in [:create]
-  plug :before_client_update when action in [:update]
-  plug :before_client_delete when action in [:delete]
   plug Authable.Plug.Authenticate, [scopes: ~w(session read)] when action in [:index]
   plug Authable.Plug.Authenticate, [scopes: ~w(session read write)] when action in [:create, :update, :delete]
   plug Shield.Arm.Confirmable, [enabled: Application.get_env(:shield, :confirmable)]
@@ -21,7 +17,8 @@ defmodule Shield.ClientController do
   end
 
   # POST /clients
-  def create(conn, %{"client" => client_params}) do
+  def create(conn, %{"client" => client_params} = params) do
+    conn = @hooks.before_client_create(conn, params)
     user = conn.assigns[:current_user]
     case ClientStore.create_user_client(user, client_params) do
       {:ok, client} ->
@@ -54,7 +51,8 @@ defmodule Shield.ClientController do
   end
 
   # PUT /clients/:id
-  def update(conn, %{"id" => id, "client" => client_params}) do
+  def update(conn, %{"id" => id, "client" => client_params} = params) do
+    conn = @hooks.before_client_update(conn, params)
     user = conn.assigns[:current_user]
     case ClientStore.update_user_client(user, id, client_params) do
       {:ok, client} ->
@@ -71,11 +69,12 @@ defmodule Shield.ClientController do
   end
 
   # DELETE /clients/:id
-  def delete(conn, %{"id" => id} = app_params) do
+  def delete(conn, %{"id" => id} = params) do
+    conn = @hooks.before_client_delete(conn, params)
     ClientStore.delete_user_client(conn.assigns[:current_user], id)
 
     conn
-    |> @hooks.after_client_delete(app_params)
+    |> @hooks.after_client_delete(params)
     |> send_resp(:no_content, "")
   end
 

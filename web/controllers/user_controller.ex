@@ -1,6 +1,5 @@
 defmodule Shield.UserController do
   use Shield.Web, :controller
-  use Shield.HookImporter
   alias Shield.Policy.User.ChangePassword, as: ChangePasswordPolicy
   alias Shield.Policy.User.Confirm, as: ConfirmPolicy
   alias Shield.Policy.User.Login, as: LoginPolicy
@@ -11,10 +10,9 @@ defmodule Shield.UserController do
 
   @renderer Application.get_env(:authable, :renderer)
   @views Application.get_env(:shield, :views)
+  @hooks Application.get_env(:shield, :hooks)
 
   plug :scrub_params, "user" when action in [:register, :login]
-  plug :before_user_register when action in [:register]
-  plug :before_user_login when action in [:login]
   plug Authable.Plug.Authenticate, [scopes: ~w(read)] when action in [:me]
   plug Authable.Plug.Authenticate, [scopes: ~w(read write)] when action in [:logout]
   plug Authable.Plug.Authenticate, [scopes: ~w(session read write)] when action in [:change_password]
@@ -80,7 +78,8 @@ defmodule Shield.UserController do
   end
 
   # POST /users/register
-  def register(conn, %{"user" => %{"email" => _, "password" => _} = user_params}) do
+  def register(conn, %{"user" => %{"email" => _, "password" => _} = user_params} = params) do
+    conn = @hooks.before_user_register(conn, params)
     case RegisterPolicy.process(user_params) do
       {:ok, %{"user" => user} = res} ->
         conn
@@ -104,7 +103,8 @@ defmodule Shield.UserController do
   end
 
   # POST /users/login
-  def login(conn, %{"user" => %{"email" => email, "password" => password} = user_params}) when is_binary(password) and is_binary(email) do
+  def login(conn, %{"user" => %{"email" => email, "password" => password} = user_params} = params) when is_binary(password) and is_binary(email) do
+    conn = @hooks.before_user_login(conn, params)
     case LoginPolicy.process(user_params) do
       {:ok, %{"user" => user, "token" => token} = res} ->
         conn

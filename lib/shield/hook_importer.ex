@@ -17,7 +17,7 @@ defmodule Shield.HookImporter do
   """
   defmacro __using__(_) do
     quote do
-      import unquote(Application.get_env(:shield, :hooks))
+      # import unquote(Application.get_env(:shield, :hooks))
       @hooks Application.get_env(:shield, :hooks)
     end
   end

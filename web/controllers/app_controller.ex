@@ -1,15 +1,13 @@
 defmodule Shield.AppController do
   use Shield.Web, :controller
-  use Shield.HookImporter
   alias Authable.OAuth2, as: OAuth2
   alias Shield.Store.App, as: AppStore
   alias Shield.Policy.App.Grant, as: GrantPolicy
 
   @views Application.get_env(:shield, :views)
   @renderer Application.get_env(:authable, :renderer)
+  @hooks Application.get_env(:shield, :hooks)
 
-  plug :before_app_authorize when action in [:authorize]
-  plug :before_app_delete when action in [:delete]
   plug Authable.Plug.Authenticate, [scopes: ~w(session read)] when action in [:index, :show]
   plug Authable.Plug.Authenticate, [scopes: ~w(session read write)] when action in [:authorize, :delete]
   plug Shield.Arm.Confirmable, [enabled: Application.get_env(:shield, :confirmable)]
@@ -33,7 +31,8 @@ defmodule Shield.AppController do
   end
 
   # POST /apps/authorize
-  def authorize(conn, %{"app" => app_params}) do
+  def authorize(conn, %{"app" => app_params} = params) do
+    conn = @hooks.before_app_authorize(conn, params)
     params = Map.put(app_params, "user", conn.assigns[:current_user])
     case GrantPolicy.process(params) do
       {:ok, %{"token" => token} = res} ->
@@ -49,11 +48,12 @@ defmodule Shield.AppController do
   end
 
   # DELETE /apps/:id
-  def delete(conn, %{"id" => id} = app_params) do
+  def delete(conn, %{"id" => id} = params) do
+    conn = @hooks.before_app_delete(conn, params)
     OAuth2.revoke_app_authorization(conn.assigns[:current_user], %{"id" => id})
 
     conn
-    |> @hooks.after_app_delete(app_params)
+    |> @hooks.after_app_delete(params)
     |> send_resp(:no_content, "")
   end
 end

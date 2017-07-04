@@ -1,14 +1,11 @@
 defmodule Shield.TokenController do
   use Shield.Web, :controller
-  use Shield.HookImporter
   alias Shield.Policy.Token.Authorize, as: AuthorizePolicy
   alias Shield.Store.Token, as: TokenStore
 
   @renderer Application.get_env(:authable, :renderer)
   @views Application.get_env(:shield, :views)
   @hooks Application.get_env(:shield, :hooks)
-
-  plug :before_token_create when action in [:create]
 
   # GET /tokens/:id
   def show(conn, %{"id" => _, "client_id" => _, "client_secret" => _} = params) do
@@ -23,7 +20,8 @@ defmodule Shield.TokenController do
   end
 
   # POST /tokens
-  def create(conn, %{"token" => token_params}) do
+  def create(conn, %{"token" => token_params} = params) do
+    conn = @hooks.before_token_create(conn, params)
     case AuthorizePolicy.process(token_params) do
       {:ok, token} ->
         conn

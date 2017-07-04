@@ -29,7 +29,8 @@ config :shield,
     base: "http://localhost:8080",
     confirmation_path: "/users/confirm?confirmation_token={{confirmation_token}}",
     reset_password_path: "/users/reset-password?reset_token={{reset_token}}"
-  }
+  },
+  ecto_repos: []
 
 config :authable,
   ecto_repos: [Authable.Repo],
